@@ -3,7 +3,8 @@ import twilio from 'twilio'
 const getClient = () =>
   twilio(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_TOKEN!)
 
-const FROM = `whatsapp:${process.env.TWILIO_WHATSAPP_FROM}`
+// env var already contains the full "whatsapp:+..." value
+const FROM = process.env.TWILIO_WHATSAPP_FROM!
 
 export async function sendWhatsAppConfirmation(
   to: string,
