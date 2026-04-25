@@ -39,7 +39,7 @@ Don't have a Hazel account yet? Start tracking your skin in 2 minutes at https:/
 — Hazel`
 
   const client = twilio(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_TOKEN!)
-  const from = `whatsapp:${process.env.TWILIO_WHATSAPP_FROM}`
+  const from = process.env.TWILIO_WHATSAPP_FROM!
 
   await client.messages.create({
     from,
