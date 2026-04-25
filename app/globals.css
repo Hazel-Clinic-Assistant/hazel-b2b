@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-hazel-off-white text-hazel-green font-sans;
+  }
+}
+
+@layer components {
+  .hazel-wordmark {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+  }
+
+  .pill {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .pill-pending {
+    @apply pill bg-gray-100 text-gray-600;
+  }
+
+  .pill-sent {
+    @apply pill bg-blue-100 text-blue-700;
+  }
+
+  .pill-delivered {
+    @apply pill bg-green-100 text-green-700;
+  }
+
+  .pill-failed {
+    @apply pill bg-red-100 text-red-700;
+  }
+
+  .pill-low {
+    @apply pill bg-emerald-100 text-emerald-700;
+  }
+
+  .pill-medium {
+    @apply pill bg-amber-100 text-amber-700;
+  }
+
+  .pill-high {
+    @apply pill bg-red-100 text-red-700;
+  }
+
+  .hazel-input {
+    @apply w-full px-4 py-3 rounded-xl border border-hazel-cream bg-white text-hazel-green placeholder:text-hazel-muted/50 focus:outline-none focus:ring-2 focus:ring-hazel-green/20 focus:border-hazel-green transition-colors;
+  }
+
+  .hazel-btn-primary {
+    @apply bg-hazel-green text-hazel-cream px-8 py-3 rounded-full font-medium hover:bg-hazel-green-light transition-colors;
+  }
+
+  .hazel-btn-secondary {
+    @apply border border-hazel-green text-hazel-green px-8 py-3 rounded-full font-medium hover:bg-hazel-green hover:text-hazel-cream transition-colors;
+  }
+}
