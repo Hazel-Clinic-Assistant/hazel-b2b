@@ -573,7 +573,7 @@ function IntakeFormContent() {
                 <p className="text-xs text-hazel-muted/60">
                   Don&apos;t have Hazel yet?{' '}
                   <a
-                    href="https://hazelskincoach.vercel.app"
+                    href={process.env.NEXT_PUBLIC_SKIN_COACH_URL}
                     target="_blank"
                     rel="noreferrer"
                     className="underline underline-offset-2 text-hazel-sage"

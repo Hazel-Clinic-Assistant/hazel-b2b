@@ -34,7 +34,7 @@ With Hazel Passport, your clinician can automatically access your skin history, 
 Activate your Passport here:
 ${passportLink}
 
-Don't have a Hazel account yet? Start tracking your skin in 2 minutes at https://hazelskincoach.vercel.app
+Don't have a Hazel account yet? Start tracking your skin in 2 minutes at ${process.env.NEXT_PUBLIC_SKIN_COACH_URL}
 
 — Hazel`
 

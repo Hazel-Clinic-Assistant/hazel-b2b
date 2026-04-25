@@ -50,7 +50,7 @@ function NoBookingState() {
         <div className="mt-8 border-t border-hazel-cream pt-6">
           <p className="text-hazel-muted text-sm mb-2">Don&apos;t have Hazel yet?</p>
           <a
-            href="https://hazelskincoach.vercel.app"
+            href={process.env.NEXT_PUBLIC_SKIN_COACH_URL}
             target="_blank"
             rel="noreferrer"
             className="text-hazel-sage text-sm underline underline-offset-2 hover:text-hazel-green transition-colors"
@@ -228,7 +228,7 @@ function PassportContent() {
             <div className="mt-6 text-center">
               <p className="text-hazel-muted text-sm mb-1">Don&apos;t have Hazel yet?</p>
               <a
-                href="https://hazelskincoach.vercel.app"
+                href={process.env.NEXT_PUBLIC_SKIN_COACH_URL}
                 target="_blank"
                 rel="noreferrer"
                 className="text-hazel-sage text-sm underline underline-offset-2 hover:text-hazel-green transition-colors"
