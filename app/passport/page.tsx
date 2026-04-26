@@ -33,19 +33,19 @@ function NoBookingState() {
   return (
     <div className="min-h-screen bg-hazel-off-white">
       <NavHeader subtitle="companion" />
-      <div className="max-w-lg mx-auto px-6 py-16 text-center">
-        <div className="w-16 h-16 rounded-full bg-hazel-green/10 flex items-center justify-center mx-auto mb-6">
-          <LeafIcon className="w-8 h-8 text-hazel-sage" />
+      <div className="max-w-lg mx-auto px-6 py-20 text-center">
+        <div className="w-12 h-12 rounded-full bg-hazel-sage/15 flex items-center justify-center mx-auto mb-7">
+          <LeafIcon className="w-6 h-6 text-hazel-sage" />
         </div>
-        <h2 className="hazel-wordmark font-bold text-4xl text-hazel-green mb-3">hazel companion</h2>
-        <p className="text-hazel-muted mb-4">
+        <h2 className="hazel-wordmark font-light text-4xl tracking-tight text-hazel-green mb-3">hazel companion</h2>
+        <p className="text-hazel-muted leading-relaxed mb-3">
           Link your hazel account to share your full skin history with your clinician — automatically — before your appointment.
         </p>
-        <p className="text-hazel-muted text-sm">
+        <p className="text-hazel-muted/60 text-sm">
           To activate, open the link sent to you via WhatsApp after booking your appointment.
         </p>
         <div className="mt-8 border-t border-hazel-cream pt-6">
-          <p className="text-hazel-muted text-sm mb-2">Don&apos;t have hazel yet?</p>
+          <p className="text-hazel-muted/60 text-sm mb-2">Don&apos;t have hazel yet?</p>
           <a
             href="https://hazelskincoach.vercel.app/patient/onboarding"
             target="_blank"
@@ -133,36 +133,36 @@ function PassportContent() {
       <div className="max-w-lg mx-auto px-6 py-12">
         {activated ? (
           <div className="text-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
-              <LeafIcon className="w-8 h-8 text-emerald-600" />
+            <div className="w-14 h-14 rounded-full bg-hazel-mint flex items-center justify-center mx-auto mb-7">
+              <LeafIcon className="w-7 h-7 text-hazel-sage" />
             </div>
-            <h2 className="hazel-wordmark font-bold text-4xl text-hazel-green mb-3">You&apos;re all set</h2>
+            <h2 className="hazel-wordmark font-light text-4xl tracking-tight text-hazel-green mb-3">You&apos;re all set</h2>
             <p className="text-hazel-muted mb-2">
               {patientName ? `${patientName}, your` : 'Your'} skin history is now linked to your appointment
               {clinicName ? <> at <strong>{clinicName}</strong></> : ''}.
             </p>
             {appointmentSlot && (
-              <p className="text-hazel-muted text-sm mb-4">
+              <p className="text-hazel-muted/60 text-sm mb-4">
                 Appointment: <span className="font-medium text-hazel-green">{appointmentSlot}</span>
               </p>
             )}
             {inviteSent && (
-              <p className="text-sm text-emerald-700 mb-4">
+              <p className="text-sm text-hazel-sage mb-4">
                 ✓ A link to hazel companion has been sent to your WhatsApp.
               </p>
             )}
-            <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-5 text-left mt-4">
-              <p className="text-sm font-medium text-emerald-800 mb-3">Your clinician will have access to:</p>
-              <ul className="space-y-2">
+            <div className="bg-hazel-mint/40 rounded-2xl border border-hazel-sage/20 p-5 text-left mt-4">
+              <p className="text-xs font-medium text-hazel-green mb-3">Your clinician will have access to:</p>
+              <ul className="space-y-2.5">
                 {SHARED_DATA.map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm text-emerald-700">
-                    <span className="mt-0.5 text-emerald-500 flex-shrink-0"><CheckIcon /></span>
+                  <li key={item} className="flex items-start gap-2.5 text-sm text-hazel-muted">
+                    <span className="mt-0.5 text-hazel-sage flex-shrink-0"><CheckIcon /></span>
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="mt-6">
+            <div className="mt-7">
               <a
                 href="https://hazelskincoach.vercel.app/patient/onboarding"
                 target="_blank"
@@ -177,27 +177,27 @@ function PassportContent() {
         ) : (
           <>
             <div className="mb-8">
-              <h2 className="hazel-wordmark font-bold text-4xl text-hazel-green mb-1">
+              <h2 className="hazel-wordmark font-light text-4xl tracking-tight text-hazel-green mb-1">
                 {patientName ? `Welcome, ${patientName}` : 'hazel companion'}
               </h2>
               {clinicName && (
-                <p className="text-hazel-muted">
+                <p className="text-hazel-muted mt-1">
                   You&apos;ve booked at <strong>{clinicName}</strong>, a hazel-powered clinic.
                 </p>
               )}
               {appointmentSlot && (
-                <p className="text-hazel-muted text-sm mt-1">
+                <p className="text-hazel-muted/60 text-sm mt-1">
                   Appointment: <span className="font-medium text-hazel-green">{appointmentSlot}</span>
                 </p>
               )}
             </div>
 
             {/* What clinician will see */}
-            <div className="bg-white rounded-2xl border border-hazel-cream p-5 mb-5">
-              <p className="text-xs font-medium text-hazel-muted uppercase tracking-wider mb-3">
+            <div className="bg-hazel-mint/30 rounded-2xl border border-hazel-sage/20 p-5 mb-4">
+              <p className="text-[10px] uppercase tracking-widest text-hazel-muted/50 mb-4">
                 What your clinician will see
               </p>
-              <ul className="space-y-2.5">
+              <ul className="space-y-3">
                 {SHARED_DATA.map((item) => (
                   <li key={item} className="flex items-start gap-2.5 text-sm text-hazel-muted">
                     <span className="mt-0.5 text-hazel-sage flex-shrink-0"><CheckIcon /></span>
@@ -205,7 +205,7 @@ function PassportContent() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 text-xs text-hazel-muted/60">
+              <p className="mt-4 text-xs text-hazel-muted/50 border-t border-hazel-sage/10 pt-4">
                 No forms to fill in. No uploads. Your clinician arrives prepared — you arrive confident.
               </p>
             </div>
@@ -216,10 +216,10 @@ function PassportContent() {
                 <p className="text-sm font-medium text-hazel-green mb-0.5">
                   Link your hazel companion account
                 </p>
-                <p className="text-xs text-hazel-muted mb-3">
+                <p className="text-xs text-hazel-muted/60 mb-4">
                   Enter the email you use to log in to hazel companion.
                 </p>
-                <label className="block text-xs text-hazel-muted mb-1.5">Email address</label>
+                <label className="block text-xs text-hazel-muted/60 mb-1.5">Email address</label>
                 <input
                   type="email"
                   className="hazel-input"
@@ -244,7 +244,7 @@ function PassportContent() {
             </div>
 
             <div className="mt-6 text-center">
-              <p className="text-hazel-muted text-sm mb-1">Don&apos;t have hazel yet?</p>
+              <p className="text-hazel-muted/50 text-sm mb-1">Don&apos;t have hazel yet?</p>
               <a
                 href="https://hazelskincoach.vercel.app/patient/onboarding"
                 target="_blank"

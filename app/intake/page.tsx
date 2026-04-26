@@ -273,15 +273,17 @@ function IntakeFormContent() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-hazel-off-white flex flex-col items-center justify-center px-6 text-center">
-        <LeafIcon className="w-12 h-12 text-hazel-sage mb-6" />
-        <h2 className="hazel-wordmark font-bold text-4xl text-hazel-green mb-3">All done — thank you</h2>
+        <div className="w-14 h-14 rounded-full bg-hazel-sage/15 flex items-center justify-center mb-7">
+          <LeafIcon className="w-7 h-7 text-hazel-sage" />
+        </div>
+        <h2 className="hazel-wordmark font-light text-4xl tracking-tight text-hazel-green mb-3">All done — thank you</h2>
         {isDemo ? (
           <>
             <p className="text-hazel-muted max-w-sm mb-2">
               This was a demo submission — nothing was saved.
             </p>
-            <p className="text-hazel-muted/70 text-sm max-w-sm mb-6">
-              In a live flow, the patient receives this link via WhatsApp after their call with Hazel. Their completed intake appears instantly on the clinic dashboard.
+            <p className="text-hazel-muted/60 text-sm max-w-sm mb-7">
+              In a live flow, the patient receives this link via WhatsApp after their call with hazel. Their completed intake appears instantly on the clinic dashboard.
             </p>
             <a href="/" className="text-sm text-hazel-green underline underline-offset-2">← Back to demo</a>
           </>
@@ -290,11 +292,11 @@ function IntakeFormContent() {
             <p className="text-hazel-muted max-w-sm mb-2">
               Your intake form has been received by <strong>{clinicName}</strong>.
             </p>
-            <p className="text-hazel-muted/70 text-sm max-w-sm mb-3">
+            <p className="text-hazel-muted/60 text-sm max-w-sm mb-4">
               Your clinician will review your skin history before your appointment. See you soon.
             </p>
             {companionEmailSent && form.companionEmail && (
-              <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2 max-w-sm">
+              <p className="text-xs text-hazel-green bg-hazel-mint/50 border border-hazel-sage/20 rounded-xl px-4 py-2 max-w-sm">
                 Companion invite sent to {form.companionEmail}
               </p>
             )}
@@ -320,24 +322,24 @@ function IntakeFormContent() {
       <div className="max-w-xl mx-auto px-5 py-10">
         {/* Demo banner */}
         {isDemo && (
-          <div className="mb-6 rounded-xl bg-hazel-sage/10 border border-hazel-sage/20 px-4 py-3 flex items-center gap-2">
+          <div className="mb-6 rounded-xl bg-hazel-mint/50 border border-hazel-sage/20 px-4 py-3 flex items-center gap-2.5">
             <LeafIcon className="w-4 h-4 text-hazel-sage shrink-0" />
-            <p className="text-xs text-hazel-sage/80">
-              <strong className="text-hazel-sage">Demo preview</strong> — pre-filled with sample data. In a live flow, patients receive this link via WhatsApp after booking.
+            <p className="text-xs text-hazel-muted">
+              <strong className="text-hazel-green">Demo preview</strong> — pre-filled with sample data. In a live flow, patients receive this link via WhatsApp after booking.
             </p>
           </div>
         )}
         {/* Progress bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-hazel-muted font-medium uppercase tracking-wider">
+            <span className="text-[10px] text-hazel-muted/50 uppercase tracking-widest">
               Step {step} of {STEPS.length}
             </span>
             <span className="text-xs text-hazel-muted">{STEPS[step - 1]}</span>
           </div>
-          <div className="h-1.5 rounded-full bg-hazel-cream overflow-hidden">
+          <div className="h-1 rounded-full bg-hazel-cream overflow-hidden">
             <div
-              className="h-full bg-hazel-green rounded-full transition-all duration-500"
+              className="h-full bg-hazel-sage rounded-full transition-all duration-500"
               style={{ width: `${(step / STEPS.length) * 100}%` }}
             />
           </div>
@@ -346,7 +348,7 @@ function IntakeFormContent() {
         {/* Step 1 */}
         {step === 1 && (
           <div className="space-y-5">
-            <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green">Your details</h2>
+            <h2 className="hazel-wordmark font-light text-3xl tracking-tight text-hazel-green">Your details</h2>
             <p className="text-hazel-muted text-sm">
               Help us personalise your visit.
             </p>
@@ -380,7 +382,7 @@ function IntakeFormContent() {
         {step === 2 && (
           <div className="space-y-6">
             <div>
-              <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green mb-1">Your skin</h2>
+              <h2 className="hazel-wordmark font-light text-3xl tracking-tight text-hazel-green mb-1">Your skin</h2>
               <p className="text-hazel-muted text-sm">Tell us about your skin type and primary concern.</p>
             </div>
 
@@ -472,7 +474,7 @@ function IntakeFormContent() {
         {step === 3 && (
           <div className="space-y-5">
             <div>
-              <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green mb-1">Skincare & health</h2>
+              <h2 className="hazel-wordmark font-light text-3xl tracking-tight text-hazel-green mb-1">Skincare & health</h2>
               <p className="text-hazel-muted text-sm">This helps your clinician tailor your consultation.</p>
             </div>
 
@@ -587,7 +589,7 @@ function IntakeFormContent() {
         {step === 4 && (
           <div className="space-y-5">
             <div>
-              <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green mb-1">Skin photos</h2>
+              <h2 className="hazel-wordmark font-light text-3xl tracking-tight text-hazel-green mb-1">Skin photos</h2>
               <p className="text-hazel-muted text-sm">
                 Upload up to 4 photos of your skin concern in natural light. This helps your clinician assess your skin before the appointment.
               </p>
@@ -689,7 +691,7 @@ function IntakeFormContent() {
         {step === 5 && (
           <div className="space-y-5">
             <div>
-              <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green mb-1">GP details</h2>
+              <h2 className="hazel-wordmark font-light text-3xl tracking-tight text-hazel-green mb-1">GP details</h2>
               <p className="text-hazel-muted text-sm">
                 In case your clinician needs to liaise with your GP.
               </p>
@@ -736,12 +738,12 @@ function IntakeFormContent() {
         {step === 6 && (
           <div className="space-y-6">
             <div>
-              <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green mb-1">Final step</h2>
+              <h2 className="hazel-wordmark font-light text-3xl tracking-tight text-hazel-green mb-1">Final step</h2>
               <p className="text-hazel-muted text-sm">Review and consent to complete your intake.</p>
             </div>
 
             {/* Passport section */}
-            <div className="rounded-2xl border border-hazel-sage/30 bg-hazel-green/5 p-5 space-y-4">
+            <div className="rounded-2xl border border-hazel-sage/25 bg-hazel-mint/30 p-5 space-y-4">
               <div className="flex items-start gap-3">
                 <LeafIcon className="w-5 h-5 text-hazel-sage mt-0.5 shrink-0" />
                 <div>
