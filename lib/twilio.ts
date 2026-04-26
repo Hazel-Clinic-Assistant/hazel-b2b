@@ -18,20 +18,80 @@ export async function sendWhatsAppConfirmation(
   const intakeLink = `${appUrl}/intake?bookingId=${bookingId}`
   const passportLink = `${appUrl}/passport?bookingId=${bookingId}`
 
-  const body = `Hi ${patientName}! 🌿
+  const slotLine = slot ? `📅 ${slot}\n` : ''
+  const addressLine = clinicAddress ? `📍 ${clinicAddress}\n` : ''
 
-Your appointment at ${clinicName} is confirmed.
+  const body = `Hi${patientName ? ` ${patientName}` : ''}! 🌿
 
-📅 Slot: ${slot}
-📍 ${clinicAddress}
+Great news — your booking at ${clinicName} has been received and we're looking forward to seeing you.
 
-Please complete your skin intake form before your visit — it only takes a few minutes:
+${slotLine}${addressLine}
+Before your visit, please take a few minutes to complete your skin intake form:
 ${intakeLink}
 
-P.S. Have a Hazel account? Link your skin history so your clinician can see your progress automatically:
+You can also link your Hazel skin passport so your clinician has your full history ready:
 ${passportLink}
 
+Reply anytime if you have questions — I'm here to help.
+
 — Hazel`
+
+  await getClient().messages.create({
+    from: FROM,
+    to: `whatsapp:${to}`,
+    body,
+  })
+}
+
+export async function sendWhatsAppSlotFollowUp(
+  to: string,
+  patientName: string,
+  skinConcern: string
+) {
+  // Generate the next four weekday slots from today
+  const doctors = ['Dr. Nikita Desai', 'Dr. Aamer Khan', 'Dr. Nikita Desai', 'Dr. Aamer Khan']
+  const times = ['10:00am', '2:00pm', '11:00am', '3:00pm']
+  const slots: string[] = []
+  const d = new Date()
+  let found = 0
+  while (found < 4) {
+    d.setDate(d.getDate() + 1)
+    const dow = d.getDay()
+    if (dow === 0 || dow === 6) continue // skip weekends
+    const label = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+    slots.push(`• ${label}, ${times[found]} — ${doctors[found]}`)
+    found++
+  }
+
+  const concernLine = skinConcern ? ` about your ${skinConcern}` : ''
+  const name = patientName ? ` ${patientName}` : ''
+
+  const body = `Hi${name}! 🌿 Thanks for chatting with Hazel.
+
+No worries about not locking in a slot on the call — here are our next available appointments at Harley Street Skin Clinic${concernLine}:
+
+${slots.join('\n')}
+
+Just reply with the one that suits you and I'll get it confirmed straight away. Or call us directly on 0207 436 4441.
+
+— Hazel`
+
+  await getClient().messages.create({
+    from: FROM,
+    to: `whatsapp:${to}`,
+    body,
+  })
+}
+
+export async function sendWhatsAppCompanionInvite(to: string, patientName: string) {
+  const name = patientName ? ` ${patientName}` : ''
+
+  const body = `Hi${name}! 🌿 Your hazel companion is now linked to your appointment.
+
+To start tracking your skin and share your full history with your clinician, open hazel here:
+https://hazelskincoach.vercel.app/patient/onboarding
+
+— hazel`
 
   await getClient().messages.create({
     from: FROM,

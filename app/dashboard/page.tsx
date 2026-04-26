@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@/lib/supabase'
+import { NavHeader } from '@/app/components/NavHeader'
 
 type Booking = {
   id: string
@@ -42,8 +43,9 @@ type IntakeSubmission = {
 
 function LeafIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className ?? 'w-4 h-4'}>
-      <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20C19 20 22 3 22 3c-1 2-8 5.5-11.5 7.5L8 9.5C8 9.5 14 7 17 8z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className ?? 'w-4 h-4'}>
+      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
     </svg>
   )
 }
@@ -82,7 +84,7 @@ function PassportBanner({
         <div className="flex items-center gap-2 mb-1">
           <LeafIcon className="w-4 h-4 text-emerald-600" />
           <span className="text-sm font-medium text-emerald-800">
-            This patient has linked their Hazel Companion
+            This patient has linked their hazel companion
           </span>
         </div>
         <p className="text-xs text-emerald-700">
@@ -95,7 +97,7 @@ function PassportBanner({
           </div>
         ) : (
           <p className="mt-2 text-xs text-emerald-600/70 italic">
-            Awaiting sync from Hazel Companion…
+            Awaiting sync from hazel companion…
           </p>
         )}
       </div>
@@ -110,7 +112,7 @@ function PassportBanner({
       >
         Send Passport invite
       </button>
-      <span className="text-xs text-hazel-muted/60">Patient hasn&apos;t linked Hazel yet</span>
+      <span className="text-xs text-hazel-muted/60">Patient hasn&apos;t linked hazel yet</span>
     </div>
   )
 }
@@ -131,7 +133,7 @@ function IntakeDetail({ submission }: { submission: IntakeSubmission }) {
   ]
 
   return (
-    <div className="mt-4 bg-[#FAF8F3] rounded-xl border border-hazel-cream p-4 space-y-3">
+    <div className="mt-4 bg-hazel-off-white rounded-xl border border-hazel-cream p-4 space-y-3">
       <p className="text-xs font-medium text-hazel-muted uppercase tracking-wider">Intake submission</p>
       <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
         {rows.map(([label, value]) =>
@@ -187,6 +189,7 @@ function DashboardContent() {
       supabase
         .from('intake_submissions')
         .select('*')
+        .eq('clinic_id', clinicParam)
         .order('created_at', { ascending: false })
         .limit(50),
       supabase
@@ -265,28 +268,20 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3]">
-      <header className="bg-[#1C3A2E] px-8 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <LeafIcon className="w-5 h-5 text-[#E8D5B0]/60" />
-          <div>
-            <span className="hazel-wordmark text-[#E8D5B0] text-xl">Hazel</span>
-            {clinicName && (
-              <span className="text-[#E8D5B0]/60 text-sm ml-2">· {clinicName}</span>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 text-xs text-[#E8D5B0]/50">
+    <div className="min-h-screen bg-hazel-off-white">
+      <NavHeader
+        subtitle={clinicName || undefined}
+        right={
+          <span className="flex items-center gap-1.5 text-xs text-hazel-cream/50">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             Live
           </span>
-        </div>
-      </header>
+        }
+      />
 
       <div className="max-w-6xl mx-auto px-8 py-8">
         <div className="mb-8">
-          <h1 className="hazel-wordmark text-3xl text-hazel-green mb-1">
+          <h1 className="hazel-wordmark font-semibold text-3xl text-hazel-green mb-1">
             {clinicName || clinicParam}
           </h1>
           <p className="text-hazel-muted text-sm">
@@ -365,7 +360,7 @@ function DashboardContent() {
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-hazel-cream bg-[#FAF8F3]">
+                  <tr className="border-b border-hazel-cream bg-hazel-off-white">
                     {['Patient', 'Concern', 'Urgency', 'Slot', 'WhatsApp', 'Passport'].map((h) => (
                       <th key={h} className="text-left px-5 py-3 text-hazel-muted font-medium text-xs uppercase tracking-wider">
                         {h}
@@ -382,7 +377,7 @@ function DashboardContent() {
                         <tr
                           key={booking.id}
                           onClick={() => setExpandedId(isExpanded ? null : booking.id)}
-                          className="hover:bg-[#FAF8F3]/70 transition-colors cursor-pointer"
+                          className="hover:bg-hazel-off-white/70 transition-colors cursor-pointer"
                         >
                           <td className="px-5 py-3.5 font-medium text-hazel-green">
                             {booking.patient_name}
@@ -407,7 +402,7 @@ function DashboardContent() {
                         </tr>
                         {isExpanded && (
                           <tr key={`${booking.id}-detail`}>
-                            <td colSpan={6} className="px-5 py-4 bg-[#FAF8F3]/50">
+                            <td colSpan={6} className="px-5 py-4 bg-hazel-off-white/50">
                               {submission ? (
                                 <IntakeDetail submission={submission} />
                               ) : (
@@ -509,8 +504,18 @@ function DashboardContent() {
                       )}
                       {sub.photo_urls?.length > 0 && (
                         <div>
-                          <p className="font-medium text-hazel-green/70 mb-0.5">Photos</p>
-                          <p>{sub.photo_urls.length} uploaded</p>
+                          <p className="font-medium text-hazel-green/70 mb-1">Photos</p>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {sub.photo_urls.map((url, i) => (
+                              <a key={i} href={url} target="_blank" rel="noreferrer">
+                                <img
+                                  src={url}
+                                  alt={`Photo ${i + 1}`}
+                                  className="w-12 h-12 rounded-lg object-cover border border-hazel-cream hover:opacity-80 transition-opacity"
+                                />
+                              </a>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -529,7 +534,7 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center">
+        <div className="min-h-screen bg-hazel-off-white flex items-center justify-center">
           <span className="text-hazel-muted text-sm">Loading dashboard…</span>
         </div>
       }

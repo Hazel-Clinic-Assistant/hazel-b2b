@@ -26,6 +26,10 @@ export async function GET() {
         clinicName,
         booking.preferred_slot
       )
+      await supabase
+        .from('bookings')
+        .update({ whatsapp_status: 'reminder_sent' })
+        .eq('id', booking.id)
       count++
     } catch (err) {
       console.error(`[send-reminders] failed for booking ${booking.id}`, err)

@@ -3,11 +3,13 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@/lib/supabase'
+import { NavHeader } from '@/app/components/NavHeader'
 
 function LeafIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className ?? 'w-4 h-4'}>
-      <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20C19 20 22 3 22 3c-1 2-8 5.5-11.5 7.5L8 9.5C8 9.5 14 7 17 8z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className ?? 'w-4 h-4'}>
+      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
     </svg>
   )
 }
@@ -29,28 +31,23 @@ const SHARED_DATA = [
 
 function NoBookingState() {
   return (
-    <div className="min-h-screen bg-[#FAF8F3]">
-      <header className="bg-[#1C3A2E] px-6 py-5">
-        <div className="flex items-center gap-2">
-          <LeafIcon className="w-5 h-5 text-[#E8D5B0]/60" />
-          <span className="hazel-wordmark text-[#E8D5B0] text-xl">Hazel Passport</span>
-        </div>
-      </header>
+    <div className="min-h-screen bg-hazel-off-white">
+      <NavHeader subtitle="companion" />
       <div className="max-w-lg mx-auto px-6 py-16 text-center">
         <div className="w-16 h-16 rounded-full bg-hazel-green/10 flex items-center justify-center mx-auto mb-6">
           <LeafIcon className="w-8 h-8 text-hazel-sage" />
         </div>
-        <h2 className="hazel-wordmark text-4xl text-hazel-green mb-3">Hazel Passport</h2>
-        <p className="text-hazel-muted mb-6">
-          Passport lets your clinician access your full Hazel skin history — automatically — before your appointment.
+        <h2 className="hazel-wordmark font-bold text-4xl text-hazel-green mb-3">hazel companion</h2>
+        <p className="text-hazel-muted mb-4">
+          Link your hazel account to share your full skin history with your clinician — automatically — before your appointment.
         </p>
         <p className="text-hazel-muted text-sm">
-          To activate your Passport, open the link sent to you via WhatsApp after booking your appointment.
+          To activate, open the link sent to you via WhatsApp after booking your appointment.
         </p>
         <div className="mt-8 border-t border-hazel-cream pt-6">
-          <p className="text-hazel-muted text-sm mb-2">Don&apos;t have Hazel yet?</p>
+          <p className="text-hazel-muted text-sm mb-2">Don&apos;t have hazel yet?</p>
           <a
-            href={process.env.NEXT_PUBLIC_SKIN_COACH_URL}
+            href="https://hazelskincoach.vercel.app/patient/onboarding"
             target="_blank"
             rel="noreferrer"
             className="text-hazel-sage text-sm underline underline-offset-2 hover:text-hazel-green transition-colors"
@@ -70,23 +67,26 @@ function PassportContent() {
   const [email, setEmail] = useState('')
   const [clinicName, setClinicName] = useState('')
   const [patientName, setPatientName] = useState('')
+  const [patientPhone, setPatientPhone] = useState('')
   const [appointmentSlot, setAppointmentSlot] = useState('')
   const [activated, setActivated] = useState(false)
   const [activating, setActivating] = useState(false)
   const [error, setError] = useState('')
+  const [inviteSent, setInviteSent] = useState(false)
 
   useEffect(() => {
     if (!bookingId) return
     const supabase = createBrowserClient()
     supabase
       .from('bookings')
-      .select('patient_name, passport_linked, preferred_slot, clinics(name)')
+      .select('patient_name, passport_linked, preferred_slot, phone, clinics(name)')
       .eq('id', bookingId)
       .single()
       .then(({ data }) => {
         if (data) {
           setPatientName(data.patient_name ?? '')
           setAppointmentSlot(data.preferred_slot ?? '')
+          setPatientPhone(data.phone ?? '')
           setClinicName((data as { clinics?: { name?: string } }).clinics?.name ?? '')
           if (data.passport_linked) setActivated(true)
         }
@@ -95,22 +95,29 @@ function PassportContent() {
 
   const handleActivate = async () => {
     if (!email.trim()) {
-      setError('Please enter your Hazel Companion email address.')
+      setError('Please enter your hazel account email address.')
       return
     }
     setActivating(true)
     setError('')
     const supabase = createBrowserClient()
 
-    await supabase
-      .from('bookings')
-      .update({ passport_linked: true })
-      .eq('id', bookingId)
+    await supabase.from('bookings').update({ passport_linked: true }).eq('id', bookingId)
+    await supabase.from('intake_submissions').update({ passport_email: email.trim() }).eq('booking_id', bookingId)
 
-    await supabase
-      .from('intake_submissions')
-      .update({ passport_email: email.trim() })
-      .eq('booking_id', bookingId)
+    // Send companion link via WhatsApp if we have a phone number
+    if (patientPhone) {
+      try {
+        await fetch('/api/send-companion-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId }),
+        })
+        setInviteSent(true)
+      } catch {
+        // non-critical — activation still succeeds
+      }
+    }
 
     setActivating(false)
     setActivated(true)
@@ -120,13 +127,8 @@ function PassportContent() {
   if (!bookingId) return <NoBookingState />
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3]">
-      <header className="bg-[#1C3A2E] px-6 py-5">
-        <div className="flex items-center gap-2">
-          <LeafIcon className="w-5 h-5 text-[#E8D5B0]/60" />
-          <span className="hazel-wordmark text-[#E8D5B0] text-xl">Hazel Passport</span>
-        </div>
-      </header>
+    <div className="min-h-screen bg-hazel-off-white">
+      <NavHeader subtitle="companion" />
 
       <div className="max-w-lg mx-auto px-6 py-12">
         {activated ? (
@@ -134,17 +136,22 @@ function PassportContent() {
             <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
               <LeafIcon className="w-8 h-8 text-emerald-600" />
             </div>
-            <h2 className="hazel-wordmark text-4xl text-hazel-green mb-3">You&apos;re all set</h2>
+            <h2 className="hazel-wordmark font-bold text-4xl text-hazel-green mb-3">You&apos;re all set</h2>
             <p className="text-hazel-muted mb-2">
               {patientName ? `${patientName}, your` : 'Your'} skin history is now linked to your appointment
               {clinicName ? <> at <strong>{clinicName}</strong></> : ''}.
             </p>
             {appointmentSlot && (
-              <p className="text-hazel-muted text-sm mb-6">
+              <p className="text-hazel-muted text-sm mb-4">
                 Appointment: <span className="font-medium text-hazel-green">{appointmentSlot}</span>
               </p>
             )}
-            <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-5 text-left mt-6">
+            {inviteSent && (
+              <p className="text-sm text-emerald-700 mb-4">
+                ✓ A link to hazel companion has been sent to your WhatsApp.
+              </p>
+            )}
+            <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-5 text-left mt-4">
               <p className="text-sm font-medium text-emerald-800 mb-3">Your clinician will have access to:</p>
               <ul className="space-y-2">
                 {SHARED_DATA.map((item) => (
@@ -155,16 +162,27 @@ function PassportContent() {
                 ))}
               </ul>
             </div>
+            <div className="mt-6">
+              <a
+                href="https://hazelskincoach.vercel.app/patient/onboarding"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 bg-hazel-green text-hazel-cream px-6 py-3 rounded-full text-sm font-medium hover:bg-hazel-green-light transition-colors"
+              >
+                <LeafIcon className="w-4 h-4" />
+                Open hazel companion
+              </a>
+            </div>
           </div>
         ) : (
           <>
             <div className="mb-8">
-              <h2 className="hazel-wordmark text-4xl text-hazel-green mb-1">
-                {patientName ? `Welcome, ${patientName}` : 'Your Hazel Passport'}
+              <h2 className="hazel-wordmark font-bold text-4xl text-hazel-green mb-1">
+                {patientName ? `Welcome, ${patientName}` : 'hazel companion'}
               </h2>
               {clinicName && (
                 <p className="text-hazel-muted">
-                  You&apos;ve booked at <strong>{clinicName}</strong>, a Hazel-powered clinic.
+                  You&apos;ve booked at <strong>{clinicName}</strong>, a hazel-powered clinic.
                 </p>
               )}
               {appointmentSlot && (
@@ -196,10 +214,10 @@ function PassportContent() {
             <div className="bg-white rounded-2xl border border-hazel-cream p-5 space-y-4">
               <div>
                 <p className="text-sm font-medium text-hazel-green mb-0.5">
-                  Link your Hazel Companion account
+                  Link your hazel companion account
                 </p>
                 <p className="text-xs text-hazel-muted mb-3">
-                  Enter the email you use to log in to the Hazel Companion app.
+                  Enter the email you use to log in to hazel companion.
                 </p>
                 <label className="block text-xs text-hazel-muted mb-1.5">Email address</label>
                 <input
@@ -221,14 +239,14 @@ function PassportContent() {
                 disabled={activating}
                 className="w-full hazel-btn-primary py-3.5 text-base disabled:opacity-50"
               >
-                {activating ? 'Activating…' : 'Activate Passport'}
+                {activating ? 'Linking…' : 'Link my hazel account'}
               </button>
             </div>
 
             <div className="mt-6 text-center">
-              <p className="text-hazel-muted text-sm mb-1">Don&apos;t have Hazel yet?</p>
+              <p className="text-hazel-muted text-sm mb-1">Don&apos;t have hazel yet?</p>
               <a
-                href={process.env.NEXT_PUBLIC_SKIN_COACH_URL}
+                href="https://hazelskincoach.vercel.app/patient/onboarding"
                 target="_blank"
                 rel="noreferrer"
                 className="text-hazel-sage text-sm underline underline-offset-2 hover:text-hazel-green transition-colors"
@@ -247,7 +265,7 @@ export default function PassportPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center">
+        <div className="min-h-screen bg-hazel-off-white flex items-center justify-center">
           <span className="text-hazel-muted text-sm">Loading…</span>
         </div>
       }

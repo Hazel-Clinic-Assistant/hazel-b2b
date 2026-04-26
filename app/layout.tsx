@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Hazel — AI Receptionist for Skin Clinics',
-  description: 'Intelligent booking, intake, and patient tracking for private UK skin clinics.',
+  title: 'hazel — every patient, perfectly prepared',
+  description: 'hazel handles bookings, intake, and patient continuity for skin clinics — 24/7.',
 }
 
 export default function RootLayout({

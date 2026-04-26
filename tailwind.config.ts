@@ -10,18 +10,17 @@ const config: Config = {
     extend: {
       colors: {
         hazel: {
-          green: '#1C3A2E',
-          'green-light': '#2A4A3C',
-          cream: '#E8D5B0',
-          'cream-light': '#F5ECD8',
-          'off-white': '#FAF8F3',
-          sage: '#7A9E8E',
-          muted: '#4A6358',
+          green: '#292524',
+          'green-light': '#44403b',
+          cream: '#EDD5C8',
+          'cream-light': '#F8EDE6',
+          'off-white': '#EDE5DC',
+          sage: '#A86848',
+          muted: '#79716b',
         },
       },
       fontFamily: {
-        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['DM Sans', 'system-ui', 'sans-serif'],
       },
     },
   },

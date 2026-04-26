@@ -3,6 +3,9 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@/lib/supabase'
+import { NavHeader } from '@/app/components/NavHeader'
+import { SpeechInputButton } from '@/app/components/SpeechInputButton'
+import { CameraCapture } from '@/app/components/CameraCapture'
 
 const SKIN_TYPES = ['oily', 'dry', 'combination', 'normal', 'sensitive'] as const
 type SkinType = (typeof SKIN_TYPES)[number]
@@ -56,20 +59,42 @@ const EMPTY: FormState = {
 
 function LeafIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className ?? 'w-4 h-4'}>
-      <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20C19 20 22 3 22 3c-1 2-8 5.5-11.5 7.5L8 9.5C8 9.5 14 7 17 8z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className ?? 'w-4 h-4'}>
+      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
     </svg>
   )
+}
+
+const DEMO_FORM: FormState = {
+  fullName: 'Jessica Thompson',
+  dateOfBirth: '1990-04-15',
+  phone: '+44 7700 900123',
+  skinType: 'combination',
+  fitzpatrickScale: 2,
+  primaryConcern: 'Pigmentation and uneven skin tone',
+  concernDuration: '2 years',
+  currentSkincareRoutine: 'Morning: gentle cleanser, vitamin C serum, SPF 50+\nEvening: retinol 0.5%, niacinamide, moisturiser',
+  currentMedications: 'None',
+  allergies: 'Fragrance, lanolin',
+  previousTreatments: 'Chemical peels (x3), one round of IPL in 2022',
+  gpName: 'Dr. Sarah Chen',
+  gpAddress: 'Marylebone Health Centre, 60 New Cavendish St, London W1G 8TT',
+  companionEmail: '',
+  consentToShareHistory: false,
+  consentedToTerms: false,
 }
 
 function IntakeFormContent() {
   const searchParams = useSearchParams()
   const bookingId = searchParams.get('bookingId')
+  const isDemo = !bookingId || bookingId === 'demo' || searchParams.get('demo') === 'true'
 
   const [step, setStep] = useState(1)
-  const [form, setForm] = useState<FormState>(EMPTY)
+  const [form, setForm] = useState<FormState>(isDemo ? DEMO_FORM : EMPTY)
   const [photos, setPhotos] = useState<File[]>([])
   const [photoUrls, setPhotoUrls] = useState<string[]>([])
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
   const [clinicId, setClinicId] = useState<string>('')
   const [clinicName, setClinicName] = useState<string>('')
   const [uploading, setUploading] = useState(false)
@@ -77,8 +102,14 @@ function IntakeFormContent() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string>('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const [showCamera, setShowCamera] = useState(false)
 
   useEffect(() => {
+    if (isDemo) {
+      setClinicName('Harley Street Skin Clinic')
+      setClinicId('demo-clinic')
+      return
+    }
     if (!bookingId) return
     const supabase = createBrowserClient()
     supabase
@@ -97,7 +128,7 @@ function IntakeFormContent() {
           }))
         }
       })
-  }, [bookingId])
+  }, [bookingId, isDemo])
 
   const set = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value
@@ -106,12 +137,26 @@ function IntakeFormContent() {
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
-    setPhotos((prev) => [...prev, ...files].slice(0, 4))
+    const merged = [...photos, ...files].slice(0, 4)
+    const added = merged.slice(photos.length)
+    const newPreviews = [...photoPreviews, ...added.map((f) => URL.createObjectURL(f))].slice(0, 4)
+    setPhotos(merged)
+    setPhotoPreviews(newPreviews)
   }
 
+  const handleCameraCapture = useCallback((file: File) => {
+    if (photos.length >= 4) return
+    const preview = URL.createObjectURL(file)
+    setPhotos((prev) => [...prev, file].slice(0, 4))
+    setPhotoPreviews((prev) => [...prev, preview].slice(0, 4))
+    setShowCamera(false)
+  }, [photos])
+
   const removePhoto = (index: number) => {
+    URL.revokeObjectURL(photoPreviews[index])
     setPhotos((prev) => prev.filter((_, i) => i !== index))
     setPhotoUrls((prev) => prev.filter((_, i) => i !== index))
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index))
   }
 
   const uploadPhotos = useCallback(async (): Promise<string[]> => {
@@ -158,6 +203,14 @@ function IntakeFormContent() {
     setSubmitting(true)
     setError('')
 
+    if (isDemo) {
+      await new Promise((r) => setTimeout(r, 800))
+      setSubmitting(false)
+      setSubmitted(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
     const supabase = createBrowserClient()
     const urls = photoUrls.length > 0 ? photoUrls : await uploadPhotos()
 
@@ -199,25 +252,31 @@ function IntakeFormContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  if (!bookingId) {
-    return (
-      <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center">
-        <p className="text-hazel-muted">No booking ID provided.</p>
-      </div>
-    )
-  }
-
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#FAF8F3] flex flex-col items-center justify-center px-6 text-center">
+      <div className="min-h-screen bg-hazel-off-white flex flex-col items-center justify-center px-6 text-center">
         <LeafIcon className="w-12 h-12 text-hazel-sage mb-6" />
-        <h2 className="hazel-wordmark text-4xl text-hazel-green mb-3">All done — thank you</h2>
-        <p className="text-hazel-muted max-w-sm mb-2">
-          Your intake form has been received by <strong>{clinicName}</strong>.
-        </p>
-        <p className="text-hazel-muted/70 text-sm max-w-sm">
-          Your clinician will review your skin history before your appointment. See you soon.
-        </p>
+        <h2 className="hazel-wordmark font-bold text-4xl text-hazel-green mb-3">All done — thank you</h2>
+        {isDemo ? (
+          <>
+            <p className="text-hazel-muted max-w-sm mb-2">
+              This was a demo submission — nothing was saved.
+            </p>
+            <p className="text-hazel-muted/70 text-sm max-w-sm mb-6">
+              In a live flow, the patient receives this link via WhatsApp after their call with Hazel. Their completed intake appears instantly on the clinic dashboard.
+            </p>
+            <a href="/" className="text-sm text-hazel-green underline underline-offset-2">← Back to demo</a>
+          </>
+        ) : (
+          <>
+            <p className="text-hazel-muted max-w-sm mb-2">
+              Your intake form has been received by <strong>{clinicName}</strong>.
+            </p>
+            <p className="text-hazel-muted/70 text-sm max-w-sm">
+              Your clinician will review your skin history before your appointment. See you soon.
+            </p>
+          </>
+        )}
       </div>
     )
   }
@@ -232,16 +291,19 @@ function IntakeFormContent() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3]">
-      <header className="bg-[#1C3A2E] px-6 py-5 flex items-center gap-3">
-        <LeafIcon className="w-5 h-5 text-[#E8D5B0]/60" />
-        <div>
-          <span className="hazel-wordmark text-[#E8D5B0] text-xl">Hazel</span>
-          <span className="text-[#E8D5B0]/50 text-sm ml-2">· {clinicName}</span>
-        </div>
-      </header>
+    <div className="min-h-screen bg-hazel-off-white">
+      <NavHeader subtitle={clinicName || undefined} />
 
       <div className="max-w-xl mx-auto px-5 py-10">
+        {/* Demo banner */}
+        {isDemo && (
+          <div className="mb-6 rounded-xl bg-hazel-sage/10 border border-hazel-sage/20 px-4 py-3 flex items-center gap-2">
+            <LeafIcon className="w-4 h-4 text-hazel-sage shrink-0" />
+            <p className="text-xs text-hazel-sage/80">
+              <strong className="text-hazel-sage">Demo preview</strong> — pre-filled with sample data. In a live flow, patients receive this link via WhatsApp after booking.
+            </p>
+          </div>
+        )}
         {/* Progress bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
@@ -261,7 +323,7 @@ function IntakeFormContent() {
         {/* Step 1 */}
         {step === 1 && (
           <div className="space-y-5">
-            <h2 className="hazel-wordmark text-3xl text-hazel-green">Your details</h2>
+            <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green">Your details</h2>
             <p className="text-hazel-muted text-sm">
               Help us personalise your visit.
             </p>
@@ -269,7 +331,12 @@ function IntakeFormContent() {
               <label className="block text-sm font-medium text-hazel-green mb-1.5">
                 Full name
               </label>
-              <input className="hazel-input" value={form.fullName} onChange={set('fullName')} placeholder="Jane Smith" />
+              <div className="relative">
+                <input className="hazel-input pr-11" value={form.fullName} onChange={set('fullName')} placeholder="Jane Smith" />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <SpeechInputButton onTranscript={(t) => setForm((f) => ({ ...f, fullName: t }))} />
+                </div>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-hazel-green mb-1.5">
@@ -290,7 +357,7 @@ function IntakeFormContent() {
         {step === 2 && (
           <div className="space-y-6">
             <div>
-              <h2 className="hazel-wordmark text-3xl text-hazel-green mb-1">Your skin</h2>
+              <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green mb-1">Your skin</h2>
               <p className="text-hazel-muted text-sm">Tell us about your skin type and primary concern.</p>
             </div>
 
@@ -339,24 +406,41 @@ function IntakeFormContent() {
               <label className="block text-sm font-medium text-hazel-green mb-1.5">
                 Primary skin concern
               </label>
-              <input
-                className="hazel-input"
-                value={form.primaryConcern}
-                onChange={set('primaryConcern')}
-                placeholder="e.g. acne, pigmentation, rosacea…"
-              />
+              <div className="relative">
+                <input
+                  className="hazel-input pr-11"
+                  value={form.primaryConcern}
+                  onChange={set('primaryConcern')}
+                  placeholder="e.g. acne, pigmentation, rosacea…"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <SpeechInputButton
+                    onTranscript={(t) =>
+                      setForm((f) => ({
+                        ...f,
+                        primaryConcern: f.primaryConcern ? `${f.primaryConcern} ${t}` : t,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-hazel-green mb-1.5">
                 How long have you had this concern?
               </label>
-              <input
-                className="hazel-input"
-                value={form.concernDuration}
-                onChange={set('concernDuration')}
-                placeholder="e.g. 6 months, 2 years…"
-              />
+              <div className="relative">
+                <input
+                  className="hazel-input pr-11"
+                  value={form.concernDuration}
+                  onChange={set('concernDuration')}
+                  placeholder="e.g. 6 months, 2 years…"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <SpeechInputButton onTranscript={(t) => setForm((f) => ({ ...f, concernDuration: t }))} />
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -365,7 +449,7 @@ function IntakeFormContent() {
         {step === 3 && (
           <div className="space-y-5">
             <div>
-              <h2 className="hazel-wordmark text-3xl text-hazel-green mb-1">Skincare & health</h2>
+              <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green mb-1">Skincare & health</h2>
               <p className="text-hazel-muted text-sm">This helps your clinician tailor your consultation.</p>
             </div>
 
@@ -373,51 +457,105 @@ function IntakeFormContent() {
               <label className="block text-sm font-medium text-hazel-green mb-1.5">
                 Current skincare routine & products
               </label>
-              <textarea
-                rows={4}
-                className="hazel-input resize-none"
-                value={form.currentSkincareRoutine}
-                onChange={set('currentSkincareRoutine')}
-                placeholder="Morning: cleanser, SPF 50+…&#10;Evening: retinol serum, moisturiser…"
-              />
+              <div className="relative">
+                <textarea
+                  rows={4}
+                  className="hazel-input resize-none pr-11"
+                  value={form.currentSkincareRoutine}
+                  onChange={set('currentSkincareRoutine')}
+                  placeholder="Morning: cleanser, SPF 50+…&#10;Evening: retinol serum, moisturiser…"
+                />
+                <div className="absolute right-2 top-2.5">
+                  <SpeechInputButton
+                    onTranscript={(t) =>
+                      setForm((f) => ({
+                        ...f,
+                        currentSkincareRoutine: f.currentSkincareRoutine
+                          ? `${f.currentSkincareRoutine}\n${t}`
+                          : t,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-hazel-green mb-1.5">
                 Current medications
               </label>
-              <textarea
-                rows={2}
-                className="hazel-input resize-none"
-                value={form.currentMedications}
-                onChange={set('currentMedications')}
-                placeholder="Include any oral or topical medications"
-              />
+              <div className="relative">
+                <textarea
+                  rows={2}
+                  className="hazel-input resize-none pr-11"
+                  value={form.currentMedications}
+                  onChange={set('currentMedications')}
+                  placeholder="Include any oral or topical medications"
+                />
+                <div className="absolute right-2 top-2.5">
+                  <SpeechInputButton
+                    onTranscript={(t) =>
+                      setForm((f) => ({
+                        ...f,
+                        currentMedications: f.currentMedications
+                          ? `${f.currentMedications}\n${t}`
+                          : t,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-hazel-green mb-1.5">
                 Known allergies
               </label>
-              <input
-                className="hazel-input"
-                value={form.allergies}
-                onChange={set('allergies')}
-                placeholder="e.g. fragrance, nickel, penicillin"
-              />
+              <div className="relative">
+                <input
+                  className="hazel-input pr-11"
+                  value={form.allergies}
+                  onChange={set('allergies')}
+                  placeholder="e.g. fragrance, nickel, penicillin"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <SpeechInputButton
+                    onTranscript={(t) =>
+                      setForm((f) => ({
+                        ...f,
+                        allergies: f.allergies ? `${f.allergies}, ${t}` : t,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-hazel-green mb-1.5">
                 Previous skin treatments
               </label>
-              <textarea
-                rows={3}
-                className="hazel-input resize-none"
-                value={form.previousTreatments}
-                onChange={set('previousTreatments')}
-                placeholder="e.g. chemical peels, laser, microneedling…"
-              />
+              <div className="relative">
+                <textarea
+                  rows={3}
+                  className="hazel-input resize-none pr-11"
+                  value={form.previousTreatments}
+                  onChange={set('previousTreatments')}
+                  placeholder="e.g. chemical peels, laser, microneedling…"
+                />
+                <div className="absolute right-2 top-2.5">
+                  <SpeechInputButton
+                    onTranscript={(t) =>
+                      setForm((f) => ({
+                        ...f,
+                        previousTreatments: f.previousTreatments
+                          ? `${f.previousTreatments}\n${t}`
+                          : t,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -426,56 +564,84 @@ function IntakeFormContent() {
         {step === 4 && (
           <div className="space-y-5">
             <div>
-              <h2 className="hazel-wordmark text-3xl text-hazel-green mb-1">Skin photos</h2>
+              <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green mb-1">Skin photos</h2>
               <p className="text-hazel-muted text-sm">
                 Upload up to 4 photos of your skin concern in natural light. This helps your clinician assess your skin before the appointment.
               </p>
             </div>
 
-            <div
-              onClick={() => fileRef.current?.click()}
-              className="border-2 border-dashed border-hazel-cream rounded-2xl p-8 text-center cursor-pointer hover:border-hazel-green/40 transition-colors bg-white"
-            >
-              <LeafIcon className="w-8 h-8 text-hazel-sage mx-auto mb-3" />
-              <p className="text-sm font-medium text-hazel-green mb-1">
-                {photos.length > 0 ? `${photos.length} photo${photos.length > 1 ? 's' : ''} selected` : 'Tap to upload photos'}
-              </p>
-              <p className="text-xs text-hazel-muted/60">JPG, PNG or HEIC · up to 4 photos</p>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={handlePhotoSelect}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={photos.length >= 4}
+                className="border-2 border-dashed border-hazel-cream rounded-2xl p-6 text-center cursor-pointer hover:border-hazel-green/40 transition-colors bg-white flex flex-col items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-hazel-sage">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" x2="12" y1="3" y2="15" />
+                </svg>
+                <p className="text-sm font-medium text-hazel-green">Upload photos</p>
+                <p className="text-xs text-hazel-muted/60">From your device</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowCamera(true)}
+                disabled={photos.length >= 4}
+                className="border-2 border-dashed border-hazel-cream rounded-2xl p-6 text-center cursor-pointer hover:border-hazel-green/40 transition-colors bg-white flex flex-col items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-hazel-sage">
+                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                  <circle cx="12" cy="13" r="3" />
+                </svg>
+                <p className="text-sm font-medium text-hazel-green">Take a photo</p>
+                <p className="text-xs text-hazel-muted/60">Use your camera</p>
+              </button>
             </div>
+
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handlePhotoSelect}
+            />
+
+            {photos.length > 0 && (
+              <p className="text-xs text-hazel-muted/60 text-center">
+                {photos.length} of 4 photo{photos.length > 1 ? 's' : ''} added
+              </p>
+            )}
 
             {photos.length > 0 && (
               <div className="grid grid-cols-2 gap-3">
                 {photos.map((file, i) => (
                   <div key={i} className="relative">
-                    <div className="rounded-xl overflow-hidden bg-hazel-cream/30 aspect-square flex items-center justify-center">
-                      <span className="text-xs text-hazel-muted truncate px-2">{file.name}</span>
+                    <div className="rounded-xl overflow-hidden aspect-square bg-hazel-cream/30">
+                      {photoPreviews[i] ? (
+                        <img
+                          src={photoPreviews[i]}
+                          alt={`Skin photo ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-xs text-hazel-muted truncate px-2">{file.name}</span>
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={() => removePhoto(i)}
-                      className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full border border-hazel-cream flex items-center justify-center text-hazel-muted hover:text-red-500"
+                      className="absolute top-2 right-2 w-6 h-6 bg-white/90 rounded-full border border-hazel-cream flex items-center justify-center text-hazel-muted hover:text-red-500 shadow-sm"
                     >
                       ×
                     </button>
                   </div>
                 ))}
               </div>
-            )}
-
-            {photos.length < 4 && photos.length > 0 && (
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="text-sm text-hazel-green underline underline-offset-2"
-              >
-                Add another photo
-              </button>
             )}
 
             {uploading && (
@@ -488,7 +654,7 @@ function IntakeFormContent() {
         {step === 5 && (
           <div className="space-y-5">
             <div>
-              <h2 className="hazel-wordmark text-3xl text-hazel-green mb-1">GP details</h2>
+              <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green mb-1">GP details</h2>
               <p className="text-hazel-muted text-sm">
                 In case your clinician needs to liaise with your GP.
               </p>
@@ -498,25 +664,35 @@ function IntakeFormContent() {
               <label className="block text-sm font-medium text-hazel-green mb-1.5">
                 GP name
               </label>
-              <input
-                className="hazel-input"
-                value={form.gpName}
-                onChange={set('gpName')}
-                placeholder="Dr. Sarah Johnson"
-              />
+              <div className="relative">
+                <input
+                  className="hazel-input pr-11"
+                  value={form.gpName}
+                  onChange={set('gpName')}
+                  placeholder="Dr. Sarah Johnson"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <SpeechInputButton onTranscript={(t) => setForm((f) => ({ ...f, gpName: t }))} />
+                </div>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-hazel-green mb-1.5">
                 Practice address
               </label>
-              <textarea
-                rows={3}
-                className="hazel-input resize-none"
-                value={form.gpAddress}
-                onChange={set('gpAddress')}
-                placeholder="The Surgery, 1 High Street, London, EC1A 1BB"
-              />
+              <div className="relative">
+                <textarea
+                  rows={3}
+                  className="hazel-input resize-none pr-11"
+                  value={form.gpAddress}
+                  onChange={set('gpAddress')}
+                  placeholder="The Surgery, 1 High Street, London, EC1A 1BB"
+                />
+                <div className="absolute right-2 top-2.5">
+                  <SpeechInputButton onTranscript={(t) => setForm((f) => ({ ...f, gpAddress: t }))} />
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -525,7 +701,7 @@ function IntakeFormContent() {
         {step === 6 && (
           <div className="space-y-6">
             <div>
-              <h2 className="hazel-wordmark text-3xl text-hazel-green mb-1">Final step</h2>
+              <h2 className="hazel-wordmark font-semibold text-3xl text-hazel-green mb-1">Final step</h2>
               <p className="text-hazel-muted text-sm">Review and consent to complete your intake.</p>
             </div>
 
@@ -535,7 +711,7 @@ function IntakeFormContent() {
                 <LeafIcon className="w-5 h-5 text-hazel-sage mt-0.5 shrink-0" />
                 <div>
                   <h3 className="font-medium text-hazel-green text-base mb-1">
-                    Do you use the Hazel Companion app?
+                    Do you use the hazel companion app?
                   </h3>
                   <p className="text-sm text-hazel-muted">
                     If you track your skin in Hazel, your clinician can access your skin history,
@@ -546,7 +722,7 @@ function IntakeFormContent() {
 
               <div>
                 <label className="block text-sm font-medium text-hazel-green mb-1.5">
-                  Your Hazel Companion email address
+                  Your hazel companion email address
                 </label>
                 <input
                   type="email"
@@ -565,13 +741,13 @@ function IntakeFormContent() {
                   className="mt-0.5 accent-hazel-green"
                 />
                 <span className="text-sm text-hazel-muted">
-                  I consent to sharing my Hazel skin history with my clinician for this appointment
+                  I consent to sharing my hazel skin history with my clinician for this appointment
                 </span>
               </label>
 
               {!form.companionEmail && (
                 <p className="text-xs text-hazel-muted/60">
-                  Don&apos;t have Hazel yet?{' '}
+                  Don&apos;t have hazel yet?{' '}
                   <a
                     href={process.env.NEXT_PUBLIC_SKIN_COACH_URL}
                     target="_blank"
@@ -639,6 +815,13 @@ function IntakeFormContent() {
           )}
         </div>
       </div>
+
+      {showCamera && (
+        <CameraCapture
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
     </div>
   )
 }
@@ -647,7 +830,7 @@ export default function IntakePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center">
+        <div className="min-h-screen bg-hazel-off-white flex items-center justify-center">
           <span className="text-hazel-muted text-sm">Loading…</span>
         </div>
       }
