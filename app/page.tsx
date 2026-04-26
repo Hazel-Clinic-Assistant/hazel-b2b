@@ -20,6 +20,26 @@ type Booking = {
   created_at: string
 }
 
+type IntakeSubmission = {
+  id: string
+  booking_id: string
+  patient_name: string
+  date_of_birth: string
+  skin_type: string
+  fitzpatrick_scale: number | null
+  primary_concern: string
+  concern_duration: string
+  previous_treatments: string
+  current_skincare_routine: string
+  current_medications: string
+  allergies: string
+  photo_urls: string[]
+  gp_name: string
+  gp_address: string
+  passport_email: string
+  consented_at: string
+}
+
 function LeafIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className ?? 'w-4 h-4'}>
@@ -73,6 +93,10 @@ export default function HomePage() {
   const [vapiState, setVapiState] = useState<VapiState>('idle')
 
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [submissions, setSubmissions] = useState<IntakeSubmission[]>([])
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [clearConfirm, setClearConfirm] = useState(false)
+  const [clearing, setClearing] = useState(false)
   const [nameHint, setNameHint] = useState(false)
   const nameRef = useRef<HTMLInputElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,15 +111,30 @@ export default function HomePage() {
     setTimeout(() => setNameHint(false), 1500)
   }
 
+  const handleClearDemo = async () => {
+    if (!clearConfirm) { setClearConfirm(true); return }
+    setClearing(true)
+    await fetch('/api/clear-demo', { method: 'POST' })
+    setBookings([])
+    setSubmissions([])
+    setExpandedId(null)
+    setClearing(false)
+    setClearConfirm(false)
+  }
+
   // The active clinic — custom if loaded, otherwise HSSC default
   const activeClinic: ClinicData = clinicData ?? DEFAULT_CLINIC
 
   const loadBookings = useCallback(async () => {
     const supabase = createBrowserClient()
-    const { data } = await supabase
-      .from('bookings').select('*').eq('clinic_id', DEMO_CLINIC_ID)
-      .order('created_at', { ascending: false }).limit(20)
-    if (data) setBookings(data)
+    const [{ data: bookingData }, { data: submissionData }] = await Promise.all([
+      supabase.from('bookings').select('*').eq('clinic_id', DEMO_CLINIC_ID)
+        .order('created_at', { ascending: false }).limit(20),
+      supabase.from('intake_submissions').select('*').eq('clinic_id', DEMO_CLINIC_ID)
+        .order('created_at', { ascending: false }).limit(20),
+    ])
+    if (bookingData) setBookings(bookingData)
+    if (submissionData) setSubmissions(submissionData)
   }, [])
 
   useEffect(() => { loadBookings() }, [loadBookings])
@@ -107,6 +146,11 @@ export default function HomePage() {
         if (payload.eventType === 'INSERT') setBookings((prev) => [payload.new as Booking, ...prev])
         else if (payload.eventType === 'UPDATE') setBookings((prev) => prev.map((b) => b.id === payload.new.id ? payload.new as Booking : b))
         else if (payload.eventType === 'DELETE') setBookings((prev) => prev.filter((b) => b.id !== (payload.old as Booking).id))
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'intake_submissions', filter: `clinic_id=eq.${DEMO_CLINIC_ID}` }, (payload) => {
+        if (payload.eventType === 'INSERT') setSubmissions((prev) => [payload.new as IntakeSubmission, ...prev])
+        else if (payload.eventType === 'UPDATE') setSubmissions((prev) => prev.map((s) => s.id === payload.new.id ? payload.new as IntakeSubmission : s))
+        else if (payload.eventType === 'DELETE') setSubmissions((prev) => prev.filter((s) => s.id !== (payload.old as IntakeSubmission).id))
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
@@ -512,11 +556,37 @@ export default function HomePage() {
       <section className="max-w-5xl mx-auto px-8 pb-20">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-hazel-green font-medium text-sm uppercase tracking-widest">Live Bookings</h3>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5 text-xs text-hazel-muted">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               Realtime
             </span>
+            {bookings.length > 0 && (
+              clearConfirm ? (
+                <span className="flex items-center gap-2">
+                  <button
+                    onClick={handleClearDemo}
+                    disabled={clearing}
+                    className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition-colors disabled:opacity-50"
+                  >
+                    {clearing ? 'Clearing…' : 'Yes, clear all'}
+                  </button>
+                  <button
+                    onClick={() => setClearConfirm(false)}
+                    className="text-xs text-hazel-muted/60 hover:text-hazel-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </span>
+              ) : (
+                <button
+                  onClick={handleClearDemo}
+                  className="text-xs text-hazel-muted/60 border border-hazel-cream px-3 py-1 rounded-full hover:border-red-200 hover:text-red-500 transition-colors"
+                >
+                  Clear demo
+                </button>
+              )
+            )}
             <a href="/dashboard" className="text-xs text-hazel-green border border-hazel-green/30 px-3 py-1 rounded-full hover:bg-hazel-green hover:text-hazel-cream transition-colors">
               Full dashboard →
             </a>
@@ -531,23 +601,122 @@ export default function HomePage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-hazel-cream bg-hazel-off-white">
-                  {['Patient', 'Concern', 'Slot', 'WhatsApp', 'Companion'].map((h) => (
+                  {['Patient', 'Concern', 'Urgency', 'Slot', 'WhatsApp', ''].map((h) => (
                     <th key={h} className="text-left px-5 py-3 text-hazel-muted font-medium text-xs uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-hazel-cream/50">
-                {bookings.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-hazel-off-white/60 transition-colors">
-                    <td className="px-5 py-3.5 font-medium text-hazel-green">{booking.patient_name}</td>
-                    <td className="px-5 py-3.5 text-hazel-muted capitalize">{booking.skin_concern}</td>
-                    <td className="px-5 py-3.5 text-hazel-muted">{booking.preferred_slot}</td>
-                    <td className="px-5 py-3.5"><WhatsAppPill status={booking.whatsapp_status} /></td>
-                    <td className="px-5 py-3.5">
-                      {booking.passport_linked ? <LeafIcon className="w-4 h-4 text-emerald-600" /> : <span className="text-gray-300 text-lg leading-none">—</span>}
-                    </td>
-                  </tr>
-                ))}
+                {bookings.map((booking) => {
+                  const isExpanded = expandedId === booking.id
+                  const sub = submissions.find((s) => s.booking_id === booking.id)
+                  return (
+                    <>
+                      <tr
+                        key={booking.id}
+                        onClick={() => setExpandedId(isExpanded ? null : booking.id)}
+                        className="hover:bg-hazel-off-white/60 transition-colors cursor-pointer"
+                      >
+                        <td className="px-5 py-3.5 font-medium text-hazel-green">{booking.patient_name}</td>
+                        <td className="px-5 py-3.5 text-hazel-muted capitalize">{booking.skin_concern}</td>
+                        <td className="px-5 py-3.5">
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
+                            booking.urgency === 'high' ? 'bg-red-100 text-red-700' :
+                            booking.urgency === 'medium' ? 'bg-amber-100 text-amber-700' :
+                            'bg-hazel-cream/60 text-hazel-muted'
+                          }`}>{booking.urgency || '—'}</span>
+                        </td>
+                        <td className="px-5 py-3.5 text-hazel-muted">{booking.preferred_slot}</td>
+                        <td className="px-5 py-3.5"><WhatsAppPill status={booking.whatsapp_status} /></td>
+                        <td className="px-5 py-3.5 text-hazel-muted/40 text-xs select-none">
+                          {isExpanded ? '▲' : '▼'}
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr key={`${booking.id}-detail`}>
+                          <td colSpan={6} className="px-5 py-5 bg-hazel-off-white/50 border-t border-hazel-cream/60">
+                            <div className="space-y-4">
+                              {/* What hazel learnt on the call */}
+                              <div>
+                                <p className="text-xs font-medium text-hazel-muted uppercase tracking-wider mb-2">What hazel learnt on the call</p>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                  {[
+                                    { label: 'Skin concern', value: booking.skin_concern },
+                                    { label: 'Urgency', value: booking.urgency },
+                                    { label: 'Preferred slot', value: booking.preferred_slot },
+                                    { label: 'Booked', value: new Date(booking.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) },
+                                  ].filter(r => r.value).map(({ label, value }) => (
+                                    <div key={label} className="bg-white rounded-xl border border-hazel-cream px-3 py-2.5">
+                                      <p className="text-xs text-hazel-muted mb-0.5">{label}</p>
+                                      <p className="text-sm font-medium text-hazel-green capitalize">{value}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Intake detail */}
+                              {sub ? (
+                                <div>
+                                  <p className="text-xs font-medium text-hazel-muted uppercase tracking-wider mb-2">Intake form — completed</p>
+                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    {[
+                                      { label: 'Date of birth', value: sub.date_of_birth },
+                                      { label: 'Skin type', value: sub.skin_type },
+                                      { label: 'Fitzpatrick scale', value: sub.fitzpatrick_scale ? `Type ${sub.fitzpatrick_scale}` : null },
+                                      { label: 'Primary concern', value: sub.primary_concern },
+                                      { label: 'Duration', value: sub.concern_duration },
+                                      { label: 'Allergies', value: sub.allergies },
+                                      { label: 'Medications', value: sub.current_medications },
+                                      { label: 'GP', value: sub.gp_name },
+                                      { label: 'GP address', value: sub.gp_address },
+                                    ].filter(r => r.value).map(({ label, value }) => (
+                                      <div key={label} className="bg-white rounded-xl border border-hazel-cream px-3 py-2.5">
+                                        <p className="text-xs text-hazel-muted mb-0.5">{label}</p>
+                                        <p className="text-sm text-hazel-green capitalize">{value}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  {(sub.current_skincare_routine || sub.previous_treatments) && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                                      {sub.current_skincare_routine && (
+                                        <div className="bg-white rounded-xl border border-hazel-cream px-3 py-2.5">
+                                          <p className="text-xs text-hazel-muted mb-1">Current skincare routine</p>
+                                          <p className="text-sm text-hazel-green whitespace-pre-wrap">{sub.current_skincare_routine}</p>
+                                        </div>
+                                      )}
+                                      {sub.previous_treatments && (
+                                        <div className="bg-white rounded-xl border border-hazel-cream px-3 py-2.5">
+                                          <p className="text-xs text-hazel-muted mb-1">Previous treatments</p>
+                                          <p className="text-sm text-hazel-green whitespace-pre-wrap">{sub.previous_treatments}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  {sub.photo_urls?.length > 0 && (
+                                    <div className="mt-3">
+                                      <p className="text-xs text-hazel-muted mb-2">Skin photos</p>
+                                      <div className="flex gap-2 flex-wrap">
+                                        {sub.photo_urls.map((url, i) => (
+                                          <a key={i} href={url} target="_blank" rel="noreferrer">
+                                            <img src={url} alt={`Skin photo ${i + 1}`} className="w-20 h-20 rounded-xl object-cover border border-hazel-cream hover:opacity-80 transition-opacity" />
+                                          </a>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-hazel-muted/60 italic">
+                                  {booking.intake_complete ? 'Intake complete — loading…' : 'Intake form not yet completed by patient.'}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  )
+                })}
               </tbody>
             </table>
           )}
