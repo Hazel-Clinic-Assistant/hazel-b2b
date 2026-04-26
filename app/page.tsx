@@ -117,6 +117,19 @@ export default function HomePage() {
   const [clinicData, setClinicData] = useState<ClinicData | null>(null)
   const [clinicId, setClinicId] = useState<string | null>(null)
 
+  // Restore custom clinic from localStorage so page refresh doesn't lose the ref
+  useEffect(() => {
+    const savedId = localStorage.getItem('hazel_clinic_id')
+    const savedData = localStorage.getItem('hazel_clinic_data')
+    if (savedId && savedData) {
+      try {
+        setClinicId(savedId)
+        setClinicData(JSON.parse(savedData))
+        setSetupState('done')
+      } catch {}
+    }
+  }, [])
+
   // Shared name + phone
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -203,6 +216,8 @@ export default function HomePage() {
       if (!res.ok || !data.clinic) throw new Error(data.error ?? 'Failed to load clinic')
       setClinicData(data.clinic)
       setClinicId(data.clinicId ?? null)
+      localStorage.setItem('hazel_clinic_id', data.clinicId ?? '')
+      localStorage.setItem('hazel_clinic_data', JSON.stringify(data.clinic))
       setSetupState('done')
     } catch (err) {
       setSetupError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
@@ -269,9 +284,10 @@ export default function HomePage() {
     vapiRef.current = null
   }
 
+  const effectiveClinicId = clinicId ?? 'demo-clinic'
   const waText = name.trim()
-    ? `Hi, I'm ${name.trim()}${clinicId ? ` [ref:${clinicId}]` : ''}`
-    : `Hi${clinicId ? ` [ref:${clinicId}]` : ''}`
+    ? `Hi, I'm ${name.trim()} [ref:${effectiveClinicId}]`
+    : `Hi [ref:${effectiveClinicId}]`
   const waLink = `https://wa.me/14155238886?text=${encodeURIComponent(waText)}`
 
   return (
@@ -322,7 +338,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => { setClinicData(null); setClinicId(null); setSetupState('idle'); setClinicUrl('') }}
+                  onClick={() => { setClinicData(null); setClinicId(null); setSetupState('idle'); setClinicUrl(''); localStorage.removeItem('hazel_clinic_id'); localStorage.removeItem('hazel_clinic_data') }}
                   className="text-xs text-hazel-muted underline underline-offset-2 shrink-0"
                 >
                   Change
