@@ -1,32 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
-
-const SYSTEM_PROMPT = `You are Hazel, the AI receptionist for Harley Street Skin Clinic. You are chatting with a patient via WhatsApp.
-
-CLINIC:
-- Address: 14 Devonshire Place, London W1G 6HX (2-min walk from Regent's Park tube)
-- Phone: 0207 436 4441
-- Hours: Mon–Fri 8am–8pm, Sat 9am–5pm, closed Sunday
-
-DOCTORS: Dr. Aamer Khan (Lead Clinician), Dr. Nikita Desai, Dr. Omar, Dr. Vasu, Dr. Basu, Dr. Tee, Dr. Waites
-
-TREATMENTS:
-• Skin: acne, rosacea, pigmentation, acne scar treatment, chemical peels, HydraFacial, microdermabrasion, IPL, photodynamic therapy, mole/skin tag/wart/cyst/milia removal, cherry angioma removal
-• Aesthetics: Botox, dermal fillers (lips, cheeks, jawline, tear trough, chin), PDO thread lifts, Silhouette Soft threads, microneedling, Sculptra, Ellansé, mesotherapy
-• Hair: PRP hair treatment, hair transplants, scalp micropigmentation
-• Surgical: facelift, rhinoplasty, blepharoplasty, liposuction, VASER lipo, breast augmentation/reduction/lift, tummy tuck, BBL, FaceTite, BodyTite, labiaplasty, buccal fat removal
-• Wellness: vitamin drips (Myers' cocktail, NAD cocktail), B12 shots, vitamin D shots
-
-PRICING: Not listed publicly — patients should book a consultation or call 0207 436 4441.
-
-COMMUNICATION STYLE:
-- Keep messages short and conversational — 2 to 4 sentences max per reply
-- Speak in British English with a warm, professional tone
-- Natural language is fine; the occasional emoji is welcome
-- Never claim to be human if directly asked
-- If a patient wants to book, collect their name, skin concern, and preferred appointment time, then confirm warmly`
+import { buildSystemPrompt, DEFAULT_CLINIC, type ClinicData } from '@/lib/clinic-prompt'
 
 type Message = { role: string; content: string }
+
+// Parse [ref:CLINIC_ID] from message body, return { cleanBody, clinicId }
+function parseClinicRef(body: string): { cleanBody: string; clinicId: string | null } {
+  const match = body.match(/\[ref:([a-z0-9_-]+)\]/i)
+  if (!match) return { cleanBody: body, clinicId: null }
+  return {
+    cleanBody: body.replace(match[0], '').replace(/\s{2,}/g, ' ').trim(),
+    clinicId: match[1],
+  }
+}
+
+async function getSystemPrompt(clinicId: string): Promise<string> {
+  if (clinicId === 'demo-clinic') return buildSystemPrompt(DEFAULT_CLINIC)
+  try {
+    const supabase = createServerClient()
+    const { data } = await supabase.from('clinics').select('data').eq('id', clinicId).single()
+    if (data?.data && typeof data.data === 'object' && (data.data as ClinicData).name) {
+      return buildSystemPrompt(data.data as ClinicData)
+    }
+  } catch {
+    // fall through to default
+  }
+  return buildSystemPrompt(DEFAULT_CLINIC)
+}
 
 function twiml(msg: string): NextResponse {
   const safe = msg
@@ -46,29 +46,22 @@ function wantsCall(text: string): boolean {
     || t === 'call' || t === '1' || t === 'one'
 }
 
-const GREETING = `Hi! 👋 I'm Hazel, the AI receptionist for Harley Street Skin Clinic.
-
-I can answer your questions about our treatments, or get you booked in with one of our doctors.
-
-Would you prefer:
-📞 *A call from Hazel* — I'll ring you within 30 seconds
-💬 *Chat here* — I'll help you over WhatsApp
-
-Just reply *call* or start chatting!`
-
 export async function POST(request: NextRequest) {
   const formData = await request.formData()
   const from = formData.get('From')?.toString() ?? ''
-  const body = formData.get('Body')?.toString().trim() ?? ''
+  const rawBody = formData.get('Body')?.toString().trim() ?? ''
   const hasMedia = !!formData.get('MediaUrl0')
   const phone = from.replace('whatsapp:', '').trim()
 
   if (!phone) return twiml('')
 
-  console.log('[whatsapp-inbound] from:', phone, 'body:', body.slice(0, 60), 'hasMedia:', hasMedia)
+  // Strip any [ref:CLINIC_ID] marker from the message
+  const { cleanBody: body, clinicId: refClinicId } = parseClinicRef(rawBody)
+
+  console.log('[whatsapp-inbound] from:', phone, 'body:', body.slice(0, 60), 'refClinicId:', refClinicId, 'hasMedia:', hasMedia)
 
   // Voice notes and other media arrive with an empty body
-  if (!body) {
+  if (!rawBody) {
     return twiml(
       hasMedia
         ? `I can't listen to voice notes just yet — please type your message and I'll get right back to you! 🎤`
@@ -89,18 +82,35 @@ export async function POST(request: NextRequest) {
     .limit(1)
     .maybeSingle()
 
-  // No active session — send greeting and wait
+  // No active session — greet using the correct clinic
   if (!session) {
+    const resolvedClinicId = refClinicId ?? 'demo-clinic'
+    const systemPrompt = await getSystemPrompt(resolvedClinicId)
+
+    // Extract clinic name from the prompt for the greeting
+    const clinicNameMatch = systemPrompt.match(/AI receptionist for (.+?)\. You/)
+    const clinicName = clinicNameMatch?.[1] ?? 'this clinic'
+
+    const greeting = `Hi! 👋 I'm hazel, the AI receptionist for ${clinicName}.
+
+I can answer your questions about treatments, or get you booked in with one of the team.
+
+Would you prefer:
+📞 *A call from hazel* — I'll ring you within 30 seconds
+💬 *Chat here* — I'll help you over WhatsApp
+
+Just reply *call* or start chatting!`
+
     await supabase.from('whatsapp_sessions').insert({
       phone,
-      clinic_id: 'demo-clinic',
+      clinic_id: resolvedClinicId,
       messages: [
-        { role: 'user', content: body },
-        { role: 'assistant', content: GREETING },
+        { role: 'user', content: body || rawBody },
+        { role: 'assistant', content: greeting },
       ],
       state: 'greeting',
     })
-    return twiml(GREETING)
+    return twiml(greeting)
   }
 
   // Append the user's message
@@ -146,7 +156,7 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         phone,
-        clinicId: 'demo-clinic',
+        clinicId: session.clinic_id ?? 'demo-clinic',
         name: chatName || undefined,
         skinConcern: chatSkinConcern || undefined,
       }),
@@ -163,8 +173,9 @@ export async function POST(request: NextRequest) {
     return twiml(reply)
   }
 
-  // AI chat response
-  let reply = `Thanks for your message. For immediate help please call us on 0207 436 4441, or visit us at 14 Devonshire Place, London W1G 6HX.`
+  // AI chat response — use the clinic that was set when this session started
+  const systemPrompt = await getSystemPrompt(session.clinic_id ?? 'demo-clinic')
+  let reply = `Thanks for your message. For immediate help please get in touch with the clinic directly.`
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY
   if (!anthropicKey) {
@@ -181,7 +192,7 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 300,
-          system: SYSTEM_PROMPT,
+          system: systemPrompt,
           messages: messages
             .filter((m) => m.content?.trim())
             .slice(-12)

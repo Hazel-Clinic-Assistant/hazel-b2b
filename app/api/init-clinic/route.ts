@@ -1,4 +1,6 @@
+import { createHash } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabase'
 
 // Jina Reader converts any URL to clean markdown, bypasses WAFs, and handles JS-rendered sites
 async function fetchViaJina(url: string): Promise<string> {
@@ -159,7 +161,17 @@ ${pageContent}`,
       )
     }
     console.log('[init-clinic] ✓', clinic.name, '| doctors:', clinic.doctors.length, '| treatments:', clinic.treatments.length)
-    return NextResponse.json({ ok: true, clinic })
+
+    // Deterministic ID from URL so repeat loads hit the same row
+    const clinicId = 'custom-' + createHash('sha256').update(normalized).digest('hex').slice(0, 12)
+
+    const supabase = createServerClient()
+    await supabase.from('clinics').upsert(
+      { id: clinicId, name: clinic.name, data: clinic },
+      { onConflict: 'id' }
+    )
+
+    return NextResponse.json({ ok: true, clinic, clinicId })
   } catch (err) {
     console.error('[init-clinic] parse error:', err, 'raw:', rawText.slice(0, 400))
     return NextResponse.json({ error: 'Could not extract clinic information from the site. Try a different page URL.' }, { status: 500 })

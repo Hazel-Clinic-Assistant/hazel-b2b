@@ -115,6 +115,7 @@ export default function HomePage() {
   const [setupState, setSetupState] = useState<SetupState>('idle')
   const [setupError, setSetupError] = useState('')
   const [clinicData, setClinicData] = useState<ClinicData | null>(null)
+  const [clinicId, setClinicId] = useState<string | null>(null)
 
   // Shared name + phone
   const [name, setName] = useState('')
@@ -201,6 +202,7 @@ export default function HomePage() {
       const data = await res.json()
       if (!res.ok || !data.clinic) throw new Error(data.error ?? 'Failed to load clinic')
       setClinicData(data.clinic)
+      setClinicId(data.clinicId ?? null)
       setSetupState('done')
     } catch (err) {
       setSetupError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
@@ -267,9 +269,10 @@ export default function HomePage() {
     vapiRef.current = null
   }
 
-  const waLink = name.trim()
-    ? `https://wa.me/14155238886?text=${encodeURIComponent(`Hi, I'm ${name.trim()}`)}`
-    : 'https://wa.me/14155238886?text=Hi'
+  const waText = name.trim()
+    ? `Hi, I'm ${name.trim()}${clinicId ? ` [ref:${clinicId}]` : ''}`
+    : clinicId ? `Hi [ref:${clinicId}]` : 'Hi'
+  const waLink = `https://wa.me/14155238886?text=${encodeURIComponent(waText)}`
 
   return (
     <div className="min-h-screen bg-hazel-off-white">
@@ -319,7 +322,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => { setClinicData(null); setSetupState('idle'); setClinicUrl('') }}
+                  onClick={() => { setClinicData(null); setClinicId(null); setSetupState('idle'); setClinicUrl('') }}
                   className="text-xs text-hazel-muted underline underline-offset-2 shrink-0"
                 >
                   Change
