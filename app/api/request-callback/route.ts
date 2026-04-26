@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { buildSystemPrompt, type ClinicData } from '@/lib/clinic-prompt'
 
+async function getAssistantModel(): Promise<Record<string, unknown> | null> {
+  const assistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID
+  const privateKey = process.env.VAPI_PRIVATE_KEY
+  if (!assistantId || !privateKey) return null
+  try {
+    const res = await fetch(`https://api.vapi.ai/assistant/${assistantId}`, {
+      headers: { Authorization: `Bearer ${privateKey}` },
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.model ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function POST(request: NextRequest) {
   const { phone, name, skinConcern, clinicId, clinicData } = await request.json()
 
@@ -19,7 +35,6 @@ export async function POST(request: NextRequest) {
 
   console.log('[request-callback] name:', firstName || '(none)', '| clinic:', clinicName, '| skinConcern:', skinConcern || '(none)')
 
-  // Open naturally — acknowledge what we know, invite them to share more.
   let firstMessage: string
   if (firstName && skinConcern) {
     firstMessage = `Hi ${firstName}! It's hazel calling from ${clinicName}. I saw you were curious about ${skinConcern} — I'd love to hear a bit more about what you're hoping for.`
@@ -37,11 +52,18 @@ export async function POST(request: NextRequest) {
     },
   }
 
-  // If a custom clinic was provided, override the system prompt
+  // Override system prompt when a custom clinic is loaded.
+  // Vapi now requires provider in model overrides — fetch the assistant's model
+  // config and merge just the messages to avoid specifying a hardcoded provider.
   if (clinic?.name) {
-    assistantOverrides.model = {
-      messages: [{ role: 'system', content: buildSystemPrompt(clinic) }],
+    const baseModel = await getAssistantModel()
+    if (baseModel) {
+      assistantOverrides.model = {
+        ...baseModel,
+        messages: [{ role: 'system', content: buildSystemPrompt(clinic) }],
+      }
     }
+    // If we can't fetch the model, firstMessage still carries the clinic name
   }
 
   const res = await fetch('https://api.vapi.ai/call/phone', {
