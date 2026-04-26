@@ -275,45 +275,52 @@ export default function HomePage() {
     <div className="min-h-screen bg-hazel-off-white">
       <NavHeader subtitle={activeClinic.name} />
 
-      {/* Hero */}
-      <section className="max-w-5xl mx-auto px-8 pt-14 pb-8 text-center">
-        {/* 24/7 badge */}
-        <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-1 rounded-full mb-6">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          Available 24/7 · responds in seconds
+      {/* ── Hero ──────────────────────────────────────────────────────── */}
+      <section className="bg-hazel-off-white px-6 pt-24 pb-20 text-center">
+        {/* Leaf mark */}
+        <div className="flex justify-center mb-6">
+          <div className="w-11 h-11 rounded-full bg-hazel-sage/15 flex items-center justify-center">
+            <LeafIcon className="w-5 h-5 text-hazel-sage" />
+          </div>
         </div>
 
-        <h2 className="hazel-wordmark font-light text-hazel-green text-5xl mb-4 leading-tight tracking-tight">
-          The voice of exceptional care.
-        </h2>
-        <p className="text-hazel-muted text-lg mb-3 max-w-xl mx-auto">
+        {/* 24/7 badge */}
+        <div className="inline-flex items-center gap-1.5 bg-hazel-mint border border-hazel-sage/30 text-hazel-green text-xs font-medium px-3.5 py-1.5 rounded-full mb-8">
+          <span className="w-1.5 h-1.5 rounded-full bg-hazel-sage animate-pulse" />
+          Available 24 / 7 · responds in seconds
+        </div>
+
+        <h1 className="hazel-wordmark font-light text-hazel-green text-5xl md:text-6xl tracking-tight leading-tight mb-5 max-w-2xl mx-auto">
+          The voice of<br className="hidden sm:block" /> exceptional care.
+        </h1>
+        <p className="text-hazel-muted text-lg max-w-md mx-auto leading-relaxed mb-12">
           Warm, intelligent and always available — hazel handles bookings, intake, and patient prep so your team can focus on what matters most.
         </p>
 
-        {/* Clinic setup input */}
-        <div className="max-w-xl mx-auto mt-8 mb-4">
+        {/* Clinic setup */}
+        <div className="max-w-xl mx-auto">
           {setupState === 'done' && clinicData ? (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 text-left">
+            <div className="bg-white border border-hazel-cream rounded-2xl px-5 py-4 text-left">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <span className="text-emerald-500 mt-0.5 text-lg">✓</span>
+                  <span className="text-hazel-sage text-lg mt-0.5">✓</span>
                   <div>
-                    <p className="font-semibold text-emerald-800">{clinicData.name}</p>
+                    <p className="font-medium text-hazel-green">{clinicData.name}</p>
                     <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
-                      {clinicData.address && <p className="text-xs text-emerald-700">📍 {clinicData.address}</p>}
-                      {clinicData.hours && <p className="text-xs text-emerald-700">🕐 {clinicData.hours}</p>}
+                      {clinicData.address && <p className="text-xs text-hazel-muted">📍 {clinicData.address}</p>}
+                      {clinicData.hours && <p className="text-xs text-hazel-muted">🕐 {clinicData.hours}</p>}
                       {clinicData.doctors.length > 0 && (
-                        <p className="text-xs text-emerald-700">👨‍⚕️ {clinicData.doctors.slice(0, 3).join(', ')}{clinicData.doctors.length > 3 ? ` +${clinicData.doctors.length - 3} more` : ''}</p>
+                        <p className="text-xs text-hazel-muted">👨‍⚕️ {clinicData.doctors.slice(0, 3).join(', ')}{clinicData.doctors.length > 3 ? ` +${clinicData.doctors.length - 3} more` : ''}</p>
                       )}
                       {clinicData.treatments.length > 0 && (
-                        <p className="text-xs text-emerald-700">💉 {clinicData.treatments.slice(0, 4).join(', ')}{clinicData.treatments.length > 4 ? '…' : ''}</p>
+                        <p className="text-xs text-hazel-muted">💉 {clinicData.treatments.slice(0, 4).join(', ')}{clinicData.treatments.length > 4 ? '…' : ''}</p>
                       )}
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => { setClinicData(null); setSetupState('idle'); setClinicUrl('') }}
-                  className="text-xs text-emerald-600 underline underline-offset-2 shrink-0 mt-0.5"
+                  className="text-xs text-hazel-muted underline underline-offset-2 shrink-0"
                 >
                   Change
                 </button>
@@ -345,7 +352,7 @@ export default function HomePage() {
                 </button>
               </div>
               {setupState === 'loading' && (
-                <p className="text-xs text-hazel-muted/70 text-center animate-pulse">
+                <p className="text-xs text-hazel-muted/60 text-center animate-pulse">
                   Reading your clinic website and extracting doctors, treatments & hours…
                 </p>
               )}
@@ -353,7 +360,7 @@ export default function HomePage() {
                 <p className="text-xs text-red-500 text-center">{setupError}</p>
               )}
               {setupState === 'idle' && (
-                <p className="text-xs text-hazel-muted/60 text-center">
+                <p className="text-xs text-hazel-muted/40 text-center">
                   Or scroll down to try the live demo with Harley Street Skin Clinic ↓
                 </p>
               )}
@@ -362,237 +369,265 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Demo section */}
-      <section className="max-w-5xl mx-auto px-8 pb-6">
-        {/* Clinic label when using HSSC default */}
-        {!clinicData && (
-          <p className="text-center text-xs text-hazel-muted/60 uppercase tracking-widest mb-6">
-            Live demo · Harley Street Skin Clinic
-          </p>
-        )}
-
-        {/* Address + hours line */}
-        <p className="text-hazel-muted/60 text-sm text-center mb-8">
-          {activeClinic.address && `${activeClinic.address}`}
-          {activeClinic.address && activeClinic.hours && ' · '}
-          {activeClinic.hours}
-        </p>
-
-        {/* Shared name field */}
-        <div className="max-w-xs mx-auto mb-6">
-          <div className="relative">
-            <input
-              ref={nameRef}
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-              className={`hazel-input text-center pr-11 transition-all duration-300 ${nameHint ? 'ring-2 ring-hazel-sage border-hazel-sage' : ''}`}
-            />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2">
-              <SpeechInputButton onTranscript={(t) => setName(t)} />
-            </div>
-          </div>
-          {!hasName && (
-            <p className="text-xs text-hazel-muted/50 text-center mt-2">Enter your name to get started</p>
-          )}
-        </div>
-
-        {/* 3-card CTA grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-
-          {/* Card 1: WhatsApp */}
-          <div className="bg-white rounded-2xl border border-hazel-cream px-7 py-7 shadow-sm flex flex-col">
-            <div className="flex items-center gap-2 mb-2">
-              <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
-              <p className="text-sm font-medium text-hazel-green">chat with hazel</p>
-            </div>
-            <p className="text-hazel-muted text-sm mb-6 flex-1">
-              Ask about {activeClinic.name} treatments or book over WhatsApp. hazel replies instantly, 24/7.
+      {/* ── Demo interaction — white band ─────────────────────────────── */}
+      <section className="bg-white border-y border-hazel-cream px-6 py-16">
+        <div className="max-w-5xl mx-auto">
+          {!clinicData && (
+            <p className="text-center text-[10px] text-hazel-muted/40 uppercase tracking-[0.2em] mb-1">
+              Live demo
             </p>
-            {hasName ? (
-              <a
-                href={waLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] text-white py-3 rounded-full font-medium hover:bg-[#1ebe5d] transition-colors text-sm"
-              >
-                <WhatsAppIcon className="w-4 h-4" />
-                Open WhatsApp
-              </a>
-            ) : (
-              <button
-                onClick={focusName}
-                className="w-full inline-flex items-center justify-center bg-hazel-cream text-hazel-muted/60 py-3 rounded-full font-medium text-sm hover:bg-hazel-cream/80 transition-colors"
-              >
-                Enter your name first ↑
-              </button>
+          )}
+          <p className="text-center text-sm font-medium text-hazel-green mb-0.5">
+            {activeClinic.name}
+          </p>
+          {(activeClinic.address || activeClinic.hours) && (
+            <p className="text-hazel-muted/50 text-xs text-center mb-10">
+              {activeClinic.address}{activeClinic.address && activeClinic.hours && ' · '}{activeClinic.hours}
+            </p>
+          )}
+
+          {/* Name input */}
+          <div className="max-w-xs mx-auto mb-10">
+            <div className="relative">
+              <input
+                ref={nameRef}
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                className={`hazel-input text-center pr-11 transition-all duration-300 ${nameHint ? 'ring-2 ring-hazel-sage border-hazel-sage' : ''}`}
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <SpeechInputButton onTranscript={(t) => setName(t)} />
+              </div>
+            </div>
+            {!hasName && (
+              <p className="text-xs text-hazel-muted/40 text-center mt-2">Enter your name to get started</p>
             )}
           </div>
 
-          {/* Card 2: Browser call */}
-          <div className="bg-white rounded-2xl border border-hazel-cream px-7 py-7 shadow-sm flex flex-col">
-            <div className="flex items-center gap-2 mb-2">
-              <PhoneIcon className="w-5 h-5 text-hazel-sage" />
-              <p className="text-sm font-medium text-hazel-green">call hazel here</p>
+          {/* 3-card CTA grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+
+            {/* Card 1: WhatsApp */}
+            <div className="bg-hazel-off-white rounded-2xl border border-hazel-cream overflow-hidden flex flex-col">
+              <div className="h-0.5 bg-[#25D366]" />
+              <div className="px-6 py-6 flex flex-col flex-1">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center shrink-0">
+                    <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
+                  </div>
+                  <p className="text-sm font-medium text-hazel-green">chat with hazel</p>
+                </div>
+                <p className="text-hazel-muted text-sm mb-6 flex-1 leading-relaxed">
+                  Ask about {activeClinic.name} treatments or book over WhatsApp. hazel replies instantly, 24/7.
+                </p>
+                {hasName ? (
+                  <a
+                    href={waLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] text-white py-3 rounded-full font-medium hover:bg-[#1ebe5d] transition-colors text-sm"
+                  >
+                    <WhatsAppIcon className="w-4 h-4" />
+                    Open WhatsApp
+                  </a>
+                ) : (
+                  <button
+                    onClick={focusName}
+                    className="w-full inline-flex items-center justify-center bg-hazel-cream text-hazel-muted/50 py-3 rounded-full font-medium text-sm hover:bg-hazel-cream/80 transition-colors"
+                  >
+                    Enter your name first ↑
+                  </button>
+                )}
+              </div>
             </div>
 
-            {vapiState === 'idle' && (
-              <>
-                <p className="text-hazel-muted text-sm mb-6 flex-1">
-                  Talk to hazel live in your browser — no phone number needed. Just click and speak.
-                </p>
-                {hasName ? (
-                  <button onClick={handleBrowserCall} className="w-full bg-hazel-green text-hazel-cream py-3 rounded-full font-medium hover:bg-hazel-green-light transition-colors text-sm">
-                    Talk to hazel →
-                  </button>
-                ) : (
-                  <button onClick={focusName} className="w-full bg-hazel-cream text-hazel-muted/60 py-3 rounded-full font-medium text-sm hover:bg-hazel-cream/80 transition-colors">
-                    Enter your name first ↑
-                  </button>
-                )}
-              </>
-            )}
-            {vapiState === 'connecting' && (
-              <>
-                <p className="text-hazel-muted text-sm mb-6 flex-1">Connecting — allow microphone access if prompted.</p>
-                <button disabled className="w-full bg-hazel-green/50 text-hazel-cream py-3 rounded-full font-medium text-sm flex items-center justify-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-hazel-cream/80 animate-ping" />
-                  Connecting…
-                </button>
-              </>
-            )}
-            {vapiState === 'active' && (
-              <>
-                <div className="flex-1 flex flex-col items-center justify-center py-4 gap-3">
-                  <div className="relative flex items-center justify-center">
-                    <span className="absolute w-12 h-12 rounded-full bg-emerald-100 animate-ping opacity-50" />
-                    <span className="relative w-8 h-8 rounded-full bg-emerald-400 flex items-center justify-center">
-                      <PhoneIcon className="w-4 h-4 text-white" />
-                    </span>
+            {/* Card 2: Browser call */}
+            <div className="bg-hazel-off-white rounded-2xl border border-hazel-cream overflow-hidden flex flex-col">
+              <div className="h-0.5 bg-hazel-sage" />
+              <div className="px-6 py-6 flex flex-col flex-1">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-hazel-sage/10 flex items-center justify-center shrink-0">
+                    <PhoneIcon className="w-4 h-4 text-hazel-sage" />
                   </div>
-                  <p className="text-sm font-medium text-hazel-green">Connected — speak now</p>
+                  <p className="text-sm font-medium text-hazel-green">call hazel here</p>
                 </div>
-                <button onClick={handleEndBrowserCall} className="w-full bg-red-500 text-white py-3 rounded-full font-medium hover:bg-red-600 transition-colors text-sm">
-                  End call
-                </button>
-              </>
-            )}
-            {vapiState === 'ended' && (
-              <>
-                <div className="flex-1 flex flex-col items-center justify-center py-4 gap-2">
-                  <LeafIcon className="w-8 h-8 text-hazel-sage" />
-                  <p className="text-sm font-medium text-hazel-green">Call ended</p>
-                  <p className="text-xs text-hazel-muted text-center">Your booking will appear in the live table below.</p>
-                </div>
-                <button onClick={() => setVapiState('idle')} className="w-full border border-hazel-green text-hazel-green py-3 rounded-full font-medium hover:bg-hazel-green hover:text-hazel-cream transition-colors text-sm">
-                  Call again
-                </button>
-              </>
-            )}
-          </div>
 
-          {/* Card 3: Callback */}
-          <div className="bg-white rounded-2xl border border-hazel-cream px-7 py-7 shadow-sm flex flex-col">
-            {callbackState === 'confirmed' ? (
-              <>
-                <div className="flex-1 flex flex-col items-center justify-center py-4 gap-2">
-                  <LeafIcon className="w-8 h-8 text-hazel-sage" />
-                  <p className="text-sm font-medium text-hazel-green">{name ? `Calling ${name} now` : 'Calling you now'}</p>
-                  <p className="text-xs text-hazel-muted text-center">Expect a call on {phone} within 30 seconds.</p>
-                </div>
-                <button onClick={() => { setCallbackState('idle'); setPhone('') }} className="text-xs text-hazel-muted/60 underline underline-offset-2">
-                  Use a different number
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 mb-2">
-                  <PhoneIcon className="w-5 h-5 text-hazel-sage" />
-                  <p className="text-sm font-medium text-hazel-green">get a call back</p>
-                </div>
-                <p className="text-hazel-muted text-sm mb-4 flex-1">
-                  Enter your number and hazel calls you within 30 seconds — no hold music, no queues.
-                </p>
-                <div className="mb-3">
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleRequestCallback()}
-                    placeholder="+1 555 000 0000"
-                    className="hazel-input text-sm"
-                  />
-                </div>
-                {hasName ? (
-                  <button
-                    onClick={handleRequestCallback}
-                    disabled={callbackState === 'requesting' || !phone.trim()}
-                    className="w-full bg-hazel-green text-hazel-cream py-3 rounded-full font-medium hover:bg-hazel-green-light transition-colors disabled:opacity-50 text-sm"
-                  >
-                    {callbackState === 'requesting' ? 'Calling you…' : 'Call me now →'}
-                  </button>
+                {vapiState === 'idle' && (
+                  <>
+                    <p className="text-hazel-muted text-sm mb-6 flex-1 leading-relaxed">
+                      Talk to hazel live in your browser — no phone number needed. Just click and speak.
+                    </p>
+                    {hasName ? (
+                      <button onClick={handleBrowserCall} className="w-full bg-hazel-green text-hazel-cream py-3 rounded-full font-medium hover:bg-hazel-green-light transition-colors text-sm">
+                        Talk to hazel →
+                      </button>
+                    ) : (
+                      <button onClick={focusName} className="w-full bg-hazel-cream text-hazel-muted/50 py-3 rounded-full font-medium text-sm hover:bg-hazel-cream/80 transition-colors">
+                        Enter your name first ↑
+                      </button>
+                    )}
+                  </>
+                )}
+                {vapiState === 'connecting' && (
+                  <>
+                    <p className="text-hazel-muted text-sm mb-6 flex-1">Connecting — allow microphone access if prompted.</p>
+                    <button disabled className="w-full bg-hazel-green/50 text-hazel-cream py-3 rounded-full font-medium text-sm flex items-center justify-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-hazel-cream/80 animate-ping" />
+                      Connecting…
+                    </button>
+                  </>
+                )}
+                {vapiState === 'active' && (
+                  <>
+                    <div className="flex-1 flex flex-col items-center justify-center py-4 gap-3">
+                      <div className="relative flex items-center justify-center">
+                        <span className="absolute w-12 h-12 rounded-full bg-hazel-sage/20 animate-ping opacity-60" />
+                        <span className="relative w-9 h-9 rounded-full bg-hazel-sage flex items-center justify-center">
+                          <PhoneIcon className="w-4 h-4 text-white" />
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-hazel-green">Connected — speak now</p>
+                    </div>
+                    <button onClick={handleEndBrowserCall} className="w-full bg-red-500 text-white py-3 rounded-full font-medium hover:bg-red-600 transition-colors text-sm">
+                      End call
+                    </button>
+                  </>
+                )}
+                {vapiState === 'ended' && (
+                  <>
+                    <div className="flex-1 flex flex-col items-center justify-center py-4 gap-2">
+                      <div className="w-9 h-9 rounded-full bg-hazel-mint flex items-center justify-center">
+                        <LeafIcon className="w-4 h-4 text-hazel-sage" />
+                      </div>
+                      <p className="text-sm font-medium text-hazel-green">Call ended</p>
+                      <p className="text-xs text-hazel-muted text-center">Your booking will appear in the live table below.</p>
+                    </div>
+                    <button onClick={() => setVapiState('idle')} className="w-full border border-hazel-green text-hazel-green py-3 rounded-full font-medium hover:bg-hazel-green hover:text-hazel-cream transition-colors text-sm">
+                      Call again
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Card 3: Callback */}
+            <div className="bg-hazel-off-white rounded-2xl border border-hazel-cream overflow-hidden flex flex-col">
+              <div className="h-0.5 bg-hazel-sage" />
+              <div className="px-6 py-6 flex flex-col flex-1">
+                {callbackState === 'confirmed' ? (
+                  <>
+                    <div className="flex-1 flex flex-col items-center justify-center py-4 gap-2">
+                      <div className="w-9 h-9 rounded-full bg-hazel-mint flex items-center justify-center">
+                        <LeafIcon className="w-4 h-4 text-hazel-sage" />
+                      </div>
+                      <p className="text-sm font-medium text-hazel-green">{name ? `Calling ${name} now` : 'Calling you now'}</p>
+                      <p className="text-xs text-hazel-muted text-center">Expect a call on {phone} within 30 seconds.</p>
+                    </div>
+                    <button onClick={() => { setCallbackState('idle'); setPhone('') }} className="text-xs text-hazel-muted/50 underline underline-offset-2">
+                      Use a different number
+                    </button>
+                  </>
                 ) : (
-                  <button onClick={focusName} className="w-full bg-hazel-cream text-hazel-muted/60 py-3 rounded-full font-medium text-sm hover:bg-hazel-cream/80 transition-colors">
-                    Enter your name first ↑
-                  </button>
+                  <>
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <div className="w-8 h-8 rounded-full bg-hazel-sage/10 flex items-center justify-center shrink-0">
+                        <PhoneIcon className="w-4 h-4 text-hazel-sage" />
+                      </div>
+                      <p className="text-sm font-medium text-hazel-green">get a call back</p>
+                    </div>
+                    <p className="text-hazel-muted text-sm mb-4 flex-1 leading-relaxed">
+                      Enter your number and hazel calls you within 30 seconds — no hold music, no queues.
+                    </p>
+                    <div className="mb-3">
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleRequestCallback()}
+                        placeholder="+1 555 000 0000"
+                        className="hazel-input text-sm"
+                      />
+                    </div>
+                    {hasName ? (
+                      <button
+                        onClick={handleRequestCallback}
+                        disabled={callbackState === 'requesting' || !phone.trim()}
+                        className="w-full bg-hazel-green text-hazel-cream py-3 rounded-full font-medium hover:bg-hazel-green-light transition-colors disabled:opacity-50 text-sm"
+                      >
+                        {callbackState === 'requesting' ? 'Calling you…' : 'Call me now →'}
+                      </button>
+                    ) : (
+                      <button onClick={focusName} className="w-full bg-hazel-cream text-hazel-muted/50 py-3 rounded-full font-medium text-sm hover:bg-hazel-cream/80 transition-colors">
+                        Enter your name first ↑
+                      </button>
+                    )}
+                    {callbackState === 'error' && (
+                      <p className="mt-2 text-xs text-red-500 text-center">Something went wrong — please try again.</p>
+                    )}
+                  </>
                 )}
-                {callbackState === 'error' && (
-                  <p className="mt-2 text-xs text-red-500 text-center">Something went wrong — please try again.</p>
-                )}
-              </>
-            )}
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* Platform navigation strip */}
-      <section className="max-w-5xl mx-auto px-8 pb-12 pt-4">
-        <p className="text-xs text-hazel-muted/50 text-center uppercase tracking-widest mb-4">Explore the full platform</p>
+      {/* ── Platform nav ──────────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-8 py-10">
+        <p className="text-[10px] text-hazel-muted/40 text-center uppercase tracking-[0.2em] mb-5">Explore the full platform</p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[
             { label: 'clinic dashboard', desc: 'Live bookings, intake & companion', href: '/dashboard', external: false },
             { label: 'intake form', desc: 'Patient pre-appointment questionnaire', href: '/intake?demo=true', external: false },
-            { label: 'hazel companion', desc: 'Patient continuity & skin tracking', href: 'https://hazelskincoach.vercel.app/patient/onboarding', external: true },
+            { label: 'hazel companion', desc: 'Patient continuity & skin tracking', href: process.env.NEXT_PUBLIC_SKIN_COACH_URL ?? '#', external: true },
           ].map(({ label, desc, href, external }) => (
             <a key={label} href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}
-              className="bg-white rounded-2xl border border-hazel-cream p-4 hover:border-hazel-green/40 hover:shadow-sm transition-all group">
+              className="bg-white rounded-2xl border border-hazel-cream p-5 hover:border-hazel-sage/40 hover:shadow-sm transition-all">
               <p className="text-sm font-medium text-hazel-green mb-0.5">
-                {label}{external && <span className="ml-1 text-hazel-muted/50 text-xs">↗</span>}
+                {label}{external && <span className="ml-1 text-hazel-muted/40 text-xs">↗</span>}
               </p>
-              <p className="text-xs text-hazel-muted/70">{desc}</p>
+              <p className="text-xs text-hazel-muted/60 leading-relaxed">{desc}</p>
             </a>
           ))}
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="max-w-5xl mx-auto px-8 pb-16">
-        <h3 className="text-center text-hazel-green font-medium text-sm uppercase tracking-widest mb-8">How hazel works</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { step: '01', title: 'Patient reaches out — any time', body: 'They text on WhatsApp, call live in the browser, or enter their number for a callback. hazel responds instantly, 24 hours a day, 7 days a week.' },
-            { step: '02', title: 'hazel books & preps', body: 'During the AI call, hazel collects name, skin concern, urgency and preferred slot — then sends a WhatsApp confirmation with an intake link.' },
-            { step: '03', title: 'Clinic arrives informed', body: "The patient's full skin intake, photos, and companion history arrive on the dashboard before the appointment. No paperwork, no surprises." },
-          ].map(({ step, title, body }) => (
-            <div key={step} className="bg-white rounded-2xl border border-hazel-cream p-6 shadow-sm">
-              <span className="text-xs font-semibold text-hazel-sage tracking-widest">{step}</span>
-              <h4 className="font-semibold text-hazel-green mt-2 mb-2">{title}</h4>
-              <p className="text-sm text-hazel-muted leading-relaxed">{body}</p>
-            </div>
-          ))}
+      {/* ── How hazel works — white band ──────────────────────────────── */}
+      <section className="bg-white border-t border-hazel-cream px-8 py-16">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-[10px] text-hazel-muted/40 text-center uppercase tracking-[0.2em] mb-14">How hazel works</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {[
+              { step: '01', title: 'Patient reaches out — any time', body: 'They text on WhatsApp, call live in the browser, or enter their number for a callback. hazel responds instantly, 24 hours a day, 7 days a week.' },
+              { step: '02', title: 'hazel books & preps', body: 'During the AI call, hazel collects name, skin concern, urgency and preferred slot — then sends a WhatsApp confirmation with an intake link.' },
+              { step: '03', title: 'Clinic arrives informed', body: "The patient's full skin intake, photos, and companion history arrive on the dashboard before the appointment. No paperwork, no surprises." },
+            ].map(({ step, title, body }) => (
+              <div key={step} className="flex gap-5">
+                <span className="text-4xl font-thin text-hazel-sage/30 leading-none shrink-0 tabular-nums">{step}</span>
+                <div className="pt-1">
+                  <h4 className="font-medium text-hazel-green mb-2 leading-snug">{title}</h4>
+                  <p className="text-sm text-hazel-muted leading-relaxed">{body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Live bookings table */}
-      <section className="max-w-5xl mx-auto px-8 pb-20">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-hazel-green font-medium text-sm uppercase tracking-widest">Live Bookings</h3>
+      {/* ── Live bookings ─────────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-8 py-16">
+        <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 text-xs text-hazel-muted">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <h3 className="text-hazel-green font-medium text-xs uppercase tracking-widest">Live Bookings</h3>
+            <span className="flex items-center gap-1.5 text-xs text-hazel-muted/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-hazel-sage animate-pulse" />
               Realtime
             </span>
+          </div>
+          <div className="flex items-center gap-3">
             {clearConfirm ? (
               <span className="flex items-center gap-2">
                 <button
@@ -612,7 +647,7 @@ export default function HomePage() {
             ) : (
               <button
                 onClick={handleClearDemo}
-                className="text-xs text-hazel-muted/60 border border-hazel-cream px-3 py-1 rounded-full hover:border-red-200 hover:text-red-500 transition-colors"
+                className="text-xs text-hazel-muted/50 border border-hazel-cream px-3 py-1 rounded-full hover:border-red-200 hover:text-red-500 transition-colors"
               >
                 Clear all bookings
               </button>
@@ -622,160 +657,158 @@ export default function HomePage() {
             </a>
           </div>
         </div>
-        <div className="rounded-2xl border border-hazel-cream bg-white overflow-hidden shadow-sm">
+
+        <div className="rounded-2xl border border-hazel-cream bg-white overflow-hidden">
           <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-hazel-cream bg-hazel-off-white">
-                  {['Patient', 'Concern', 'Urgency', 'Slot', 'WhatsApp', 'Companion', ''].map((h) => (
-                    <th key={h} className="text-left px-5 py-3 text-hazel-muted font-medium text-xs uppercase tracking-wider">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-hazel-cream/50">
-                {[FIXTURE_BOOKING, ...bookings].map((booking) => {
-                  const isExpanded = expandedId === booking.id
-                  const sub = booking.id === '__fixture__'
-                    ? FIXTURE_SUBMISSION
-                    : submissions.find((s) => s.booking_id === booking.id)
-                  return (
-                    <>
-                      <tr
-                        key={booking.id}
-                        onClick={() => setExpandedId(isExpanded ? null : booking.id)}
-                        className="hover:bg-hazel-off-white/60 transition-colors cursor-pointer"
-                      >
-                        <td className="px-5 py-3.5 font-medium text-hazel-green">{booking.patient_name}</td>
-                        <td className="px-5 py-3.5 text-hazel-muted capitalize">{booking.skin_concern}</td>
-                        <td className="px-5 py-3.5">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
-                            booking.urgency === 'high' ? 'bg-red-100 text-red-700' :
-                            booking.urgency === 'medium' ? 'bg-amber-100 text-amber-700' :
-                            'bg-hazel-cream/60 text-hazel-muted'
-                          }`}>{booking.urgency || '—'}</span>
-                        </td>
-                        <td className="px-5 py-3.5 text-hazel-muted">{booking.preferred_slot}</td>
-                        <td className="px-5 py-3.5"><WhatsAppPill status={booking.whatsapp_status} /></td>
-                        <td className="px-5 py-3.5">
-                          {booking.passport_linked
-                            ? <LeafIcon className="w-4 h-4 text-emerald-600" />
-                            : <span className="text-hazel-cream text-lg leading-none">—</span>}
-                        </td>
-                        <td className="px-5 py-3.5 text-hazel-muted/40 text-xs select-none">
-                          {isExpanded ? '▲' : '▼'}
-                        </td>
-                      </tr>
-                      {isExpanded && (
-                        <tr key={`${booking.id}-detail`}>
-                          <td colSpan={7} className="px-5 py-5 bg-hazel-off-white/50 border-t border-hazel-cream/60">
-                            <div className="space-y-4">
-                              {/* What hazel learnt on the call */}
+            <thead>
+              <tr className="border-b border-hazel-cream bg-hazel-off-white">
+                {['Patient', 'Concern', 'Urgency', 'Slot', 'WhatsApp', 'Companion', ''].map((h) => (
+                  <th key={h} className="text-left px-5 py-3 text-hazel-muted font-medium text-xs uppercase tracking-wider">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-hazel-cream/50">
+              {[FIXTURE_BOOKING, ...bookings].map((booking) => {
+                const isExpanded = expandedId === booking.id
+                const sub = booking.id === '__fixture__'
+                  ? FIXTURE_SUBMISSION
+                  : submissions.find((s) => s.booking_id === booking.id)
+                return (
+                  <>
+                    <tr
+                      key={booking.id}
+                      onClick={() => setExpandedId(isExpanded ? null : booking.id)}
+                      className="hover:bg-hazel-off-white/60 transition-colors cursor-pointer"
+                    >
+                      <td className="px-5 py-3.5 font-medium text-hazel-green">{booking.patient_name}</td>
+                      <td className="px-5 py-3.5 text-hazel-muted capitalize">{booking.skin_concern}</td>
+                      <td className="px-5 py-3.5">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
+                          booking.urgency === 'high' ? 'bg-red-100 text-red-700' :
+                          booking.urgency === 'medium' ? 'bg-amber-100 text-amber-700' :
+                          'bg-hazel-cream/60 text-hazel-muted'
+                        }`}>{booking.urgency || '—'}</span>
+                      </td>
+                      <td className="px-5 py-3.5 text-hazel-muted">{booking.preferred_slot}</td>
+                      <td className="px-5 py-3.5"><WhatsAppPill status={booking.whatsapp_status} /></td>
+                      <td className="px-5 py-3.5">
+                        {booking.passport_linked
+                          ? <LeafIcon className="w-4 h-4 text-hazel-sage" />
+                          : <span className="text-hazel-cream/60 text-lg leading-none">—</span>}
+                      </td>
+                      <td className="px-5 py-3.5 text-hazel-muted/30 text-xs select-none">
+                        {isExpanded ? '▲' : '▼'}
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr key={`${booking.id}-detail`}>
+                        <td colSpan={7} className="px-5 py-5 bg-hazel-off-white/60 border-t border-hazel-cream/60">
+                          <div className="space-y-4">
+                            <div>
+                              <p className="text-[10px] font-medium text-hazel-muted/60 uppercase tracking-widest mb-3">What hazel learnt on the call</p>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {[
+                                  { label: 'Skin concern', value: booking.skin_concern },
+                                  { label: 'Urgency', value: booking.urgency },
+                                  { label: 'Preferred slot', value: booking.preferred_slot },
+                                  { label: 'Booked', value: new Date(booking.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) },
+                                ].filter(r => r.value).map(({ label, value }) => (
+                                  <div key={label} className="bg-white rounded-xl border border-hazel-cream px-3 py-2.5">
+                                    <p className="text-xs text-hazel-muted/60 mb-0.5">{label}</p>
+                                    <p className="text-sm font-medium text-hazel-green capitalize">{value}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {sub ? (
                               <div>
-                                <p className="text-xs font-medium text-hazel-muted uppercase tracking-wider mb-2">What hazel learnt on the call</p>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <p className="text-[10px] font-medium text-hazel-muted/60 uppercase tracking-widest mb-3">Intake form — completed</p>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                   {[
-                                    { label: 'Skin concern', value: booking.skin_concern },
-                                    { label: 'Urgency', value: booking.urgency },
-                                    { label: 'Preferred slot', value: booking.preferred_slot },
-                                    { label: 'Booked', value: new Date(booking.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) },
+                                    { label: 'Date of birth', value: sub.date_of_birth },
+                                    { label: 'Skin type', value: sub.skin_type },
+                                    { label: 'Fitzpatrick scale', value: sub.fitzpatrick_scale ? `Type ${sub.fitzpatrick_scale}` : null },
+                                    { label: 'Primary concern', value: sub.primary_concern },
+                                    { label: 'Duration', value: sub.concern_duration },
+                                    { label: 'Allergies', value: sub.allergies },
+                                    { label: 'Medications', value: sub.current_medications },
+                                    { label: 'GP', value: sub.gp_name },
+                                    { label: 'GP address', value: sub.gp_address },
                                   ].filter(r => r.value).map(({ label, value }) => (
                                     <div key={label} className="bg-white rounded-xl border border-hazel-cream px-3 py-2.5">
-                                      <p className="text-xs text-hazel-muted mb-0.5">{label}</p>
-                                      <p className="text-sm font-medium text-hazel-green capitalize">{value}</p>
+                                      <p className="text-xs text-hazel-muted/60 mb-0.5">{label}</p>
+                                      <p className="text-sm text-hazel-green capitalize">{value}</p>
                                     </div>
                                   ))}
                                 </div>
-                              </div>
-
-                              {/* Intake detail */}
-                              {sub ? (
-                                <div>
-                                  <p className="text-xs font-medium text-hazel-muted uppercase tracking-wider mb-2">Intake form — completed</p>
-                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    {[
-                                      { label: 'Date of birth', value: sub.date_of_birth },
-                                      { label: 'Skin type', value: sub.skin_type },
-                                      { label: 'Fitzpatrick scale', value: sub.fitzpatrick_scale ? `Type ${sub.fitzpatrick_scale}` : null },
-                                      { label: 'Primary concern', value: sub.primary_concern },
-                                      { label: 'Duration', value: sub.concern_duration },
-                                      { label: 'Allergies', value: sub.allergies },
-                                      { label: 'Medications', value: sub.current_medications },
-                                      { label: 'GP', value: sub.gp_name },
-                                      { label: 'GP address', value: sub.gp_address },
-                                    ].filter(r => r.value).map(({ label, value }) => (
-                                      <div key={label} className="bg-white rounded-xl border border-hazel-cream px-3 py-2.5">
-                                        <p className="text-xs text-hazel-muted mb-0.5">{label}</p>
-                                        <p className="text-sm text-hazel-green capitalize">{value}</p>
+                                {(sub.current_skincare_routine || sub.previous_treatments) && (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                                    {sub.current_skincare_routine && (
+                                      <div className="bg-white rounded-xl border border-hazel-cream px-3 py-2.5">
+                                        <p className="text-xs text-hazel-muted/60 mb-1">Current skincare routine</p>
+                                        <p className="text-sm text-hazel-green whitespace-pre-wrap">{sub.current_skincare_routine}</p>
                                       </div>
-                                    ))}
+                                    )}
+                                    {sub.previous_treatments && (
+                                      <div className="bg-white rounded-xl border border-hazel-cream px-3 py-2.5">
+                                        <p className="text-xs text-hazel-muted/60 mb-1">Previous treatments</p>
+                                        <p className="text-sm text-hazel-green whitespace-pre-wrap">{sub.previous_treatments}</p>
+                                      </div>
+                                    )}
                                   </div>
-                                  {(sub.current_skincare_routine || sub.previous_treatments) && (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                                      {sub.current_skincare_routine && (
-                                        <div className="bg-white rounded-xl border border-hazel-cream px-3 py-2.5">
-                                          <p className="text-xs text-hazel-muted mb-1">Current skincare routine</p>
-                                          <p className="text-sm text-hazel-green whitespace-pre-wrap">{sub.current_skincare_routine}</p>
-                                        </div>
-                                      )}
-                                      {sub.previous_treatments && (
-                                        <div className="bg-white rounded-xl border border-hazel-cream px-3 py-2.5">
-                                          <p className="text-xs text-hazel-muted mb-1">Previous treatments</p>
-                                          <p className="text-sm text-hazel-green whitespace-pre-wrap">{sub.previous_treatments}</p>
-                                        </div>
-                                      )}
+                                )}
+                                {sub.photo_urls?.length > 0 && (
+                                  <div className="mt-3">
+                                    <p className="text-xs text-hazel-muted/60 mb-2">Skin photos</p>
+                                    <div className="flex gap-2 flex-wrap">
+                                      {sub.photo_urls.map((url, i) => (
+                                        <a key={i} href={url} target="_blank" rel="noreferrer">
+                                          <img src={url} alt={`Skin photo ${i + 1}`} className="w-20 h-20 rounded-xl object-cover border border-hazel-cream hover:opacity-80 transition-opacity" />
+                                        </a>
+                                      ))}
                                     </div>
-                                  )}
-                                  {sub.photo_urls?.length > 0 && (
-                                    <div className="mt-3">
-                                      <p className="text-xs text-hazel-muted mb-2">Skin photos</p>
-                                      <div className="flex gap-2 flex-wrap">
-                                        {sub.photo_urls.map((url, i) => (
-                                          <a key={i} href={url} target="_blank" rel="noreferrer">
-                                            <img src={url} alt={`Skin photo ${i + 1}`} className="w-20 h-20 rounded-xl object-cover border border-hazel-cream hover:opacity-80 transition-opacity" />
-                                          </a>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              ) : booking.intake_complete ? (
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 animate-pulse">
-                                  {[...Array(6)].map((_, i) => (
-                                    <div key={i} className="bg-hazel-cream/40 rounded-xl h-14" />
-                                  ))}
-                                </div>
-                              ) : (
-                                <p className="text-xs text-hazel-muted/60 italic">
-                                  Intake form not yet completed by patient.
-                                </p>
-                              )}
+                                  </div>
+                                )}
+                              </div>
+                            ) : booking.intake_complete ? (
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 animate-pulse">
+                                {[...Array(6)].map((_, i) => (
+                                  <div key={i} className="bg-hazel-cream/40 rounded-xl h-14" />
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-hazel-muted/50 italic">Intake form not yet completed by patient.</p>
+                            )}
 
-                              {booking.passport_linked && (
-                                <div className="mt-4 flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
-                                  <LeafIcon className="w-4 h-4 text-emerald-600 shrink-0" />
-                                  <span className="text-sm text-emerald-800 font-medium">Companion linked via hazel</span>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </>
-                  )
-                })}
-                {bookings.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="py-6 px-5 text-center text-hazel-muted/60 text-xs">
-                      Call or message hazel above to create a live booking — it will appear here instantly.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                            {booking.passport_linked && (
+                              <div className="flex items-center gap-2 bg-hazel-mint/50 border border-hazel-sage/20 rounded-xl px-4 py-3">
+                                <LeafIcon className="w-4 h-4 text-hazel-sage shrink-0" />
+                                <span className="text-sm text-hazel-green font-medium">Companion linked via hazel</span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                )
+              })}
+              {bookings.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-8 px-5 text-center text-hazel-muted/40 text-xs">
+                    Call or message hazel above to create a live booking — it will appear here instantly.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 
-      <footer className="border-t border-hazel-cream py-6 text-center text-xs text-hazel-muted/60">
-        hazel · AI receptionist for skin clinics · available 24/7
+      <footer className="border-t border-hazel-cream py-10 text-center">
+        <p className="hazel-wordmark text-hazel-green/60 text-base mb-1">hazel</p>
+        <p className="text-xs text-hazel-muted/40">The voice of exceptional care · available 24 / 7</p>
       </footer>
     </div>
   )
