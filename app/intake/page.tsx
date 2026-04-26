@@ -98,8 +98,10 @@ function IntakeFormContent() {
   const [clinicId, setClinicId] = useState<string>('')
   const [clinicName, setClinicName] = useState<string>('')
   const [uploading, setUploading] = useState(false)
+  const [uploadWarning, setUploadWarning] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [companionEmailSent, setCompanionEmailSent] = useState(false)
   const [error, setError] = useState<string>('')
   const fileRef = useRef<HTMLInputElement>(null)
   const [showCamera, setShowCamera] = useState(false)
@@ -162,8 +164,10 @@ function IntakeFormContent() {
   const uploadPhotos = useCallback(async (): Promise<string[]> => {
     if (!bookingId || !clinicId || photos.length === 0) return photoUrls
     setUploading(true)
+    setUploadWarning('')
     const supabase = createBrowserClient()
     const urls: string[] = []
+    const failed: string[] = []
 
     for (const file of photos) {
       const path = `${clinicId}/${bookingId}/${Date.now()}-${file.name}`
@@ -172,12 +176,16 @@ function IntakeFormContent() {
         .upload(path, file, { upsert: true })
       if (uploadError) {
         console.error('[intake] upload error', uploadError)
+        failed.push(file.name)
         continue
       }
       const { data } = supabase.storage.from('intake-photos').getPublicUrl(path)
       urls.push(data.publicUrl)
     }
     setUploading(false)
+    if (failed.length > 0) {
+      setUploadWarning(`${failed.length} photo${failed.length > 1 ? 's' : ''} couldn't be uploaded: ${failed.join(', ')}`)
+    }
     setPhotoUrls(urls)
     return urls
   }, [bookingId, clinicId, photos, photoUrls])
@@ -252,7 +260,9 @@ function IntakeFormContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: form.companionEmail, patientName: form.fullName }),
-      }).catch(() => {})
+      })
+        .then((r) => { if (r.ok) setCompanionEmailSent(true) })
+        .catch(() => {})
     }
 
     setSubmitting(false)
@@ -280,9 +290,14 @@ function IntakeFormContent() {
             <p className="text-hazel-muted max-w-sm mb-2">
               Your intake form has been received by <strong>{clinicName}</strong>.
             </p>
-            <p className="text-hazel-muted/70 text-sm max-w-sm">
+            <p className="text-hazel-muted/70 text-sm max-w-sm mb-3">
               Your clinician will review your skin history before your appointment. See you soon.
             </p>
+            {companionEmailSent && form.companionEmail && (
+              <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2 max-w-sm">
+                Companion invite sent to {form.companionEmail}
+              </p>
+            )}
           </>
         )}
       </div>
@@ -371,7 +386,7 @@ function IntakeFormContent() {
 
             <div>
               <label className="block text-sm font-medium text-hazel-green mb-2">Skin type</label>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                 {SKIN_TYPES.map((t) => (
                   <button
                     key={t}
@@ -652,8 +667,20 @@ function IntakeFormContent() {
               </div>
             )}
 
+            {photos.length === 0 && (
+              <p className="text-xs text-hazel-muted/60 text-center">
+                Photos are optional — tap Continue to skip
+              </p>
+            )}
+
             {uploading && (
               <p className="text-sm text-hazel-muted animate-pulse">Uploading photos…</p>
+            )}
+
+            {uploadWarning && (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+                ⚠ {uploadWarning}
+              </p>
             )}
           </div>
         )}

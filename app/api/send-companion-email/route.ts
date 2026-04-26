@@ -13,7 +13,9 @@ export async function POST(request: NextRequest) {
 
   const from = process.env.RESEND_FROM_EMAIL ?? 'hazel <onboarding@resend.dev>'
   const signupUrl = process.env.NEXT_PUBLIC_SKIN_COACH_URL ?? 'https://hazelskincoach.vercel.app/patient/onboarding'
-  const firstName = patientName?.split(' ')[0] ?? 'there'
+  const rawFirst = patientName?.split(' ')[0] ?? 'there'
+  const escapeMap: Record<string, string> = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }
+  const firstName = rawFirst.replace(/[<>&"]/g, (c: string) => escapeMap[c])
 
   const html = `
 <!DOCTYPE html>

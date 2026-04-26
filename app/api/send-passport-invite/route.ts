@@ -41,11 +41,15 @@ Don't have a Hazel account yet? Start tracking your skin in 2 minutes at ${proce
   const client = twilio(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_TOKEN!)
   const from = process.env.TWILIO_WHATSAPP_FROM!
 
-  await client.messages.create({
-    from,
-    to: `whatsapp:${booking.phone}`,
-    body,
-  })
-
-  return NextResponse.json({ ok: true })
+  try {
+    await client.messages.create({
+      from,
+      to: `whatsapp:${booking.phone}`,
+      body,
+    })
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[send-passport-invite] Twilio error', err)
+    return NextResponse.json({ ok: false, error: 'Failed to send message' }, { status: 500 })
+  }
 }

@@ -33,7 +33,7 @@ export function SpeechInputButton({ onTranscript, className }: Props) {
     const rec = new SR()
     rec.continuous = false
     rec.interimResults = false
-    rec.lang = 'en-GB'
+    rec.lang = navigator.language || 'en-GB'
 
     rec.onresult = (e: any) => {
       const transcript = Array.from(e.results as any[])

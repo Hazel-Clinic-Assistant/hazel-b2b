@@ -46,7 +46,7 @@ const FIXTURE_BOOKING: Booking = {
   skin_concern: 'hyperpigmentation & melasma',
   preferred_slot: 'Thu 2pm',
   whatsapp_status: 'delivered',
-  passport_linked: false,
+  passport_linked: true,
   intake_complete: true,
   urgency: 'high',
   created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
@@ -67,7 +67,7 @@ const FIXTURE_SUBMISSION: IntakeSubmission = {
   allergies: 'Hydroquinone (severe irritation, contact dermatitis) · Fragrance · Propylene glycol',
   gp_name: 'Dr. Priya Nair',
   gp_address: 'Southwark Health Centre, 97 Peckham Road, London SE15 4SF',
-  passport_email: '',
+  passport_email: 'amara@hazel.health',
   consented_at: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
   photo_urls: [],
 }
@@ -737,10 +737,23 @@ export default function HomePage() {
                                     </div>
                                   )}
                                 </div>
+                              ) : booking.intake_complete ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 animate-pulse">
+                                  {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="bg-hazel-cream/40 rounded-xl h-14" />
+                                  ))}
+                                </div>
                               ) : (
                                 <p className="text-xs text-hazel-muted/60 italic">
-                                  {booking.intake_complete ? 'Intake complete — loading…' : 'Intake form not yet completed by patient.'}
+                                  Intake form not yet completed by patient.
                                 </p>
+                              )}
+
+                              {booking.passport_linked && (
+                                <div className="mt-4 flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
+                                  <LeafIcon className="w-4 h-4 text-emerald-600 shrink-0" />
+                                  <span className="text-sm text-emerald-800 font-medium">Companion linked via hazel</span>
+                                </div>
                               )}
                             </div>
                           </td>
