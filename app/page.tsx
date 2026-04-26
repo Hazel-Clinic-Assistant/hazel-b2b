@@ -283,11 +283,11 @@ export default function HomePage() {
           Available 24/7 · responds in seconds
         </div>
 
-        <h2 className="hazel-wordmark font-bold text-hazel-green text-5xl mb-4 leading-tight">
-          Every patient, perfectly prepared.
+        <h2 className="hazel-wordmark font-light text-hazel-green text-5xl mb-4 leading-tight tracking-tight">
+          The voice of exceptional care.
         </h2>
         <p className="text-hazel-muted text-lg mb-3 max-w-xl mx-auto">
-          hazel is your always-on AI receptionist — booking consultations, collecting intake, and delivering a full patient profile before they walk in the door.
+          Warm, intelligent and always available — hazel handles bookings, intake, and patient prep so your team can focus on what matters most.
         </p>
 
         {/* Clinic setup input */}
