@@ -625,12 +625,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="rounded-2xl border border-hazel-cream bg-white overflow-hidden shadow-sm">
-          {bookings.length === 0 ? (
-            <div className="py-16 text-center text-hazel-muted text-sm">
-              No bookings yet — request a callback or chat on WhatsApp to create one.
-            </div>
-          ) : (
-            <table className="w-full text-sm">
+          <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-hazel-cream bg-hazel-off-white">
                   {['Patient', 'Concern', 'Urgency', 'Slot', 'WhatsApp', ''].map((h) => (
@@ -751,9 +746,15 @@ export default function HomePage() {
                     </>
                   )
                 })}
+                {bookings.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-6 px-5 text-center text-hazel-muted/60 text-xs">
+                      Call or message hazel above to create a live booking — it will appear here instantly.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
-          )}
         </div>
       </section>
 
