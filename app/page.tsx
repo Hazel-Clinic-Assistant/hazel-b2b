@@ -40,6 +40,38 @@ type IntakeSubmission = {
   consented_at: string
 }
 
+const FIXTURE_BOOKING: Booking = {
+  id: '__fixture__',
+  patient_name: 'Amara Osei-Bonsu',
+  skin_concern: 'hyperpigmentation & melasma',
+  preferred_slot: 'Thu 2pm',
+  whatsapp_status: 'delivered',
+  passport_linked: false,
+  intake_complete: true,
+  urgency: 'high',
+  created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+}
+
+const FIXTURE_SUBMISSION: IntakeSubmission = {
+  id: '__fixture__',
+  booking_id: '__fixture__',
+  patient_name: 'Amara Osei-Bonsu',
+  date_of_birth: '1988-03-12',
+  skin_type: 'combination',
+  fitzpatrick_scale: 4,
+  primary_concern: 'Hyperpigmentation and melasma — significant darkening across cheeks and upper lip, worsened considerably after second pregnancy',
+  concern_duration: '3 years',
+  previous_treatments: 'Chemical peels ×5 (Jessner\'s, 2021–2022) · Cosmelan depigmentation peel (Apr 2023) · IPL ×3 — discontinued after rebound hyperpigmentation',
+  current_skincare_routine: 'AM: gentle foaming cleanser · niacinamide 10% · tranexamic acid serum · SPF 50+ mineral (reapplied at lunch)\nPM: micellar cleanse · kojic acid cream (Rx) · ceramide barrier moisturiser',
+  current_medications: 'Tranexamic acid 250mg oral (dermatologist Rx) · Kojic acid 2% topical (Rx) · Cetirizine 10mg (seasonal)',
+  allergies: 'Hydroquinone (severe irritation, contact dermatitis) · Fragrance · Propylene glycol',
+  gp_name: 'Dr. Priya Nair',
+  gp_address: 'Southwark Health Centre, 97 Peckham Road, London SE15 4SF',
+  passport_email: '',
+  consented_at: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+  photo_urls: [],
+}
+
 function LeafIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className ?? 'w-4 h-4'}>
@@ -607,9 +639,11 @@ export default function HomePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-hazel-cream/50">
-                {bookings.map((booking) => {
+                {[FIXTURE_BOOKING, ...bookings].map((booking) => {
                   const isExpanded = expandedId === booking.id
-                  const sub = submissions.find((s) => s.booking_id === booking.id)
+                  const sub = booking.id === '__fixture__'
+                    ? FIXTURE_SUBMISSION
+                    : submissions.find((s) => s.booking_id === booking.id)
                   return (
                     <>
                       <tr
