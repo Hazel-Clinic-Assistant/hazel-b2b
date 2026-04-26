@@ -247,6 +247,14 @@ function IntakeFormContent() {
 
     await supabase.from('bookings').update(bookingUpdates).eq('id', bookingId)
 
+    if (form.companionEmail) {
+      fetch('/api/send-companion-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.companionEmail, patientName: form.fullName }),
+      }).catch(() => {})
+    }
+
     setSubmitting(false)
     setSubmitted(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })

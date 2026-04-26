@@ -593,31 +593,29 @@ export default function HomePage() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               Realtime
             </span>
-            {bookings.length > 0 && (
-              clearConfirm ? (
-                <span className="flex items-center gap-2">
-                  <button
-                    onClick={handleClearDemo}
-                    disabled={clearing}
-                    className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition-colors disabled:opacity-50"
-                  >
-                    {clearing ? 'Clearing…' : 'Yes, clear all'}
-                  </button>
-                  <button
-                    onClick={() => setClearConfirm(false)}
-                    className="text-xs text-hazel-muted/60 hover:text-hazel-muted transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </span>
-              ) : (
+            {clearConfirm ? (
+              <span className="flex items-center gap-2">
                 <button
                   onClick={handleClearDemo}
-                  className="text-xs text-hazel-muted/60 border border-hazel-cream px-3 py-1 rounded-full hover:border-red-200 hover:text-red-500 transition-colors"
+                  disabled={clearing}
+                  className="text-xs text-red-600 border border-red-200 bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition-colors disabled:opacity-50"
                 >
-                  Clear demo
+                  {clearing ? 'Clearing…' : 'Yes, clear all'}
                 </button>
-              )
+                <button
+                  onClick={() => setClearConfirm(false)}
+                  className="text-xs text-hazel-muted/60 hover:text-hazel-muted transition-colors"
+                >
+                  Cancel
+                </button>
+              </span>
+            ) : (
+              <button
+                onClick={handleClearDemo}
+                className="text-xs text-hazel-muted/60 border border-hazel-cream px-3 py-1 rounded-full hover:border-red-200 hover:text-red-500 transition-colors"
+              >
+                Clear all bookings
+              </button>
             )}
             <a href="/dashboard" className="text-xs text-hazel-green border border-hazel-green/30 px-3 py-1 rounded-full hover:bg-hazel-green hover:text-hazel-cream transition-colors">
               Full dashboard →
@@ -628,7 +626,7 @@ export default function HomePage() {
           <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-hazel-cream bg-hazel-off-white">
-                  {['Patient', 'Concern', 'Urgency', 'Slot', 'WhatsApp', ''].map((h) => (
+                  {['Patient', 'Concern', 'Urgency', 'Slot', 'WhatsApp', 'Companion', ''].map((h) => (
                     <th key={h} className="text-left px-5 py-3 text-hazel-muted font-medium text-xs uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
@@ -657,13 +655,18 @@ export default function HomePage() {
                         </td>
                         <td className="px-5 py-3.5 text-hazel-muted">{booking.preferred_slot}</td>
                         <td className="px-5 py-3.5"><WhatsAppPill status={booking.whatsapp_status} /></td>
+                        <td className="px-5 py-3.5">
+                          {booking.passport_linked
+                            ? <LeafIcon className="w-4 h-4 text-emerald-600" />
+                            : <span className="text-hazel-cream text-lg leading-none">—</span>}
+                        </td>
                         <td className="px-5 py-3.5 text-hazel-muted/40 text-xs select-none">
                           {isExpanded ? '▲' : '▼'}
                         </td>
                       </tr>
                       {isExpanded && (
                         <tr key={`${booking.id}-detail`}>
-                          <td colSpan={6} className="px-5 py-5 bg-hazel-off-white/50 border-t border-hazel-cream/60">
+                          <td colSpan={7} className="px-5 py-5 bg-hazel-off-white/50 border-t border-hazel-cream/60">
                             <div className="space-y-4">
                               {/* What hazel learnt on the call */}
                               <div>
@@ -748,7 +751,7 @@ export default function HomePage() {
                 })}
                 {bookings.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-6 px-5 text-center text-hazel-muted/60 text-xs">
+                    <td colSpan={7} className="py-6 px-5 text-center text-hazel-muted/60 text-xs">
                       Call or message hazel above to create a live booking — it will appear here instantly.
                     </td>
                   </tr>
