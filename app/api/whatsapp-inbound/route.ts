@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 import { buildSystemPrompt, DEFAULT_CLINIC, type ClinicData } from '@/lib/clinic-prompt'
+import { sendWhatsAppConfirmation } from '@/lib/twilio'
 
 type Message = { role: string; content: string }
 
-// Parse [ref:CLINIC_ID] from message body, return { cleanBody, clinicId }
 function parseClinicRef(body: string): { cleanBody: string; clinicId: string | null } {
   const match = body.match(/\[ref:([a-z0-9_-]+)\]/i)
   if (!match) return { cleanBody: body, clinicId: null }
@@ -14,8 +14,8 @@ function parseClinicRef(body: string): { cleanBody: string; clinicId: string | n
   }
 }
 
-async function getSystemPrompt(clinicId: string): Promise<string> {
-  if (!clinicId || clinicId === 'demo-clinic') return buildSystemPrompt(DEFAULT_CLINIC)
+async function getClinicData(clinicId: string): Promise<ClinicData> {
+  if (!clinicId || clinicId === 'demo-clinic') return DEFAULT_CLINIC
   try {
     const supabase = createServerClient()
     const { data: fileData, error } = await supabase.storage
@@ -24,11 +24,11 @@ async function getSystemPrompt(clinicId: string): Promise<string> {
     if (error || !fileData) throw new Error(error?.message ?? 'no file')
     const json = await fileData.text()
     const clinic: ClinicData = JSON.parse(json)
-    if (clinic.name) return buildSystemPrompt(clinic)
+    if (clinic.name) return clinic
   } catch (err) {
     console.warn('[whatsapp-inbound] clinic config not found for', clinicId, err)
   }
-  return buildSystemPrompt(DEFAULT_CLINIC)
+  return DEFAULT_CLINIC
 }
 
 function twiml(msg: string): NextResponse {
@@ -44,9 +44,14 @@ function twiml(msg: string): NextResponse {
 
 function wantsCall(text: string): boolean {
   const t = text.toLowerCase().trim()
-  // Must explicitly mention a call or phone — avoids triggering on general agreement words
   return /\b(call me|give me a call|ring me|phone me|call us|call you|i'd like a call|can you call|please call|want a call|get a call)\b/.test(t)
     || t === 'call' || t === '1' || t === 'one'
+}
+
+function isConfirmedSlot(slot: string | undefined): boolean {
+  if (!slot || !slot.trim()) return false
+  if (/^(none|n\/a|not specified|unknown|tbd|null|not confirmed|not booked|no slot|not selected|not chosen)$/i.test(slot.trim())) return false
+  return /\b(am|pm|morning|afternoon|evening|monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|\d{1,2}(:\d{2})?)\b/i.test(slot)
 }
 
 export async function POST(request: NextRequest) {
@@ -58,12 +63,10 @@ export async function POST(request: NextRequest) {
 
   if (!phone) return twiml('')
 
-  // Strip any [ref:CLINIC_ID] marker from the message
   const { cleanBody: body, clinicId: refClinicId } = parseClinicRef(rawBody)
 
   console.log('[whatsapp-inbound] from:', phone, 'body:', body.slice(0, 60), 'refClinicId:', refClinicId, 'hasMedia:', hasMedia)
 
-  // Voice notes and other media arrive with an empty body
   if (!rawBody) {
     return twiml(
       hasMedia
@@ -74,7 +77,6 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServerClient()
 
-  // Find an active session in the last 8 hours
   const cutoff = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
   const { data: session } = await supabase
     .from('whatsapp_sessions')
@@ -85,16 +87,11 @@ export async function POST(request: NextRequest) {
     .limit(1)
     .maybeSingle()
 
-  // No active session — greet using the correct clinic
   if (!session) {
     const resolvedClinicId = refClinicId ?? 'demo-clinic'
-    const systemPrompt = await getSystemPrompt(resolvedClinicId)
+    const clinic = await getClinicData(resolvedClinicId)
 
-    // Extract clinic name from the prompt for the greeting
-    const clinicNameMatch = systemPrompt.match(/AI receptionist for (.+?)\. You/)
-    const clinicName = clinicNameMatch?.[1] ?? 'this clinic'
-
-    const greeting = `Hi! 👋 I'm hazel, the AI receptionist for ${clinicName}.
+    const greeting = `Hi! 👋 I'm hazel, the AI receptionist for ${clinic.name}.
 
 I can answer your questions about treatments, or get you booked in with one of the team.
 
@@ -116,7 +113,6 @@ Just reply *call* or start chatting!`
     return twiml(greeting)
   }
 
-  // If the message contains a clinic ref and the session has a different clinic_id, update it
   if (refClinicId && refClinicId !== session.clinic_id) {
     await supabase
       .from('whatsapp_sessions')
@@ -125,12 +121,9 @@ Just reply *call* or start chatting!`
     session.clinic_id = refClinicId
   }
 
-  // Append the clean user message (ref stripped) to history
   const messages: Message[] = [...(session.messages ?? []), { role: 'user', content: body || rawBody }]
 
-  // Check for call intent in any state
   if (wantsCall(body)) {
-    // Extract name and skin concern from chat history so the call picks up where we left off
     let chatName = ''
     let chatSkinConcern = ''
     const anthropicKey = process.env.ANTHROPIC_API_KEY
@@ -158,7 +151,7 @@ Just reply *call* or start chatting!`
         chatName = parsed.name ?? ''
         chatSkinConcern = parsed.skin_concern ?? ''
       } catch {
-        // best-effort — proceed without context
+        // best-effort
       }
     }
 
@@ -185,8 +178,9 @@ Just reply *call* or start chatting!`
     return twiml(reply)
   }
 
-  // AI chat response — use the clinic that was set when this session started
-  const systemPrompt = await getSystemPrompt(session.clinic_id ?? 'demo-clinic')
+  // Load clinic data once — used for both the system prompt and booking confirmation
+  const clinicData = await getClinicData(session.clinic_id ?? 'demo-clinic')
+  const systemPrompt = buildSystemPrompt(clinicData)
   let reply = `Thanks for your message. For immediate help please get in touch with the clinic directly.`
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY
@@ -227,10 +221,85 @@ Just reply *call* or start chatting!`
   }
 
   const updated = [...messages, { role: 'assistant', content: reply }]
+  const newState = session.state === 'booking_confirmed' ? 'booking_confirmed' : 'chatting'
+
   await supabase
     .from('whatsapp_sessions')
-    .update({ messages: updated, state: 'chatting', updated_at: new Date().toISOString() })
+    .update({ messages: updated, state: newState, updated_at: new Date().toISOString() })
     .eq('id', session.id)
+
+  // After hazel replies, check if a booking was just confirmed in the chat.
+  // Only run when we have enough context and haven't already created a booking.
+  if (session.state !== 'booking_confirmed' && anthropicKey && updated.length >= 4) {
+    try {
+      const transcript = updated
+        .map((m) => `${m.role === 'user' ? 'Patient' : 'Hazel'}: ${m.content}`)
+        .join('\n')
+
+      const extractRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 120,
+          system: 'Extract booking info from this WhatsApp chat. Reply ONLY with valid JSON: {"has_confirmed_booking":false,"patient_name":"","skin_concern":"","urgency":"low","preferred_slot":""}. Set has_confirmed_booking=true ONLY if hazel has explicitly confirmed a booking with a specific date or time.',
+          messages: [{ role: 'user', content: transcript }],
+        }),
+      })
+
+      const extractData = await extractRes.json()
+      const extracted = JSON.parse(extractData.content?.[0]?.text ?? '{}')
+
+      if (extracted.has_confirmed_booking && isConfirmedSlot(extracted.preferred_slot)) {
+        console.log('[whatsapp-inbound] booking detected via chat for', extracted.patient_name, '|', extracted.preferred_slot)
+
+        const { data: booking, error: bookingErr } = await supabase
+          .from('bookings')
+          .insert({
+            clinic_id: session.clinic_id ?? 'demo-clinic',
+            patient_name: extracted.patient_name ?? '',
+            skin_concern: extracted.skin_concern ?? '',
+            urgency: extracted.urgency ?? 'low',
+            preferred_slot: extracted.preferred_slot,
+            phone,
+            whatsapp_status: 'pending',
+            intake_complete: false,
+            passport_linked: false,
+          })
+          .select()
+          .single()
+
+        if (!bookingErr && booking) {
+          try {
+            await sendWhatsAppConfirmation(
+              phone,
+              extracted.patient_name ?? '',
+              clinicData.name,
+              clinicData.address ?? '',
+              extracted.preferred_slot,
+              booking.id
+            )
+            await supabase.from('bookings').update({ whatsapp_status: 'sent' }).eq('id', booking.id)
+          } catch (err) {
+            console.error('[whatsapp-inbound] intake invite send error', err)
+          }
+
+          await supabase
+            .from('whatsapp_sessions')
+            .update({ state: 'booking_confirmed', updated_at: new Date().toISOString() })
+            .eq('id', session.id)
+
+          console.log('[whatsapp-inbound] booking created + intake form sent, id:', booking.id)
+        }
+      }
+    } catch (err) {
+      console.warn('[whatsapp-inbound] booking detection failed:', err)
+    }
+  }
 
   return twiml(reply)
 }
