@@ -15,15 +15,18 @@ function parseClinicRef(body: string): { cleanBody: string; clinicId: string | n
 }
 
 async function getSystemPrompt(clinicId: string): Promise<string> {
-  if (clinicId === 'demo-clinic') return buildSystemPrompt(DEFAULT_CLINIC)
+  if (!clinicId || clinicId === 'demo-clinic') return buildSystemPrompt(DEFAULT_CLINIC)
   try {
     const supabase = createServerClient()
-    const { data } = await supabase.from('clinics').select('data').eq('id', clinicId).single()
-    if (data?.data && typeof data.data === 'object' && (data.data as ClinicData).name) {
-      return buildSystemPrompt(data.data as ClinicData)
-    }
-  } catch {
-    // fall through to default
+    const { data: fileData, error } = await supabase.storage
+      .from('intake-photos')
+      .download(`_configs/${clinicId}.json`)
+    if (error || !fileData) throw new Error(error?.message ?? 'no file')
+    const json = await fileData.text()
+    const clinic: ClinicData = JSON.parse(json)
+    if (clinic.name) return buildSystemPrompt(clinic)
+  } catch (err) {
+    console.warn('[whatsapp-inbound] clinic config not found for', clinicId, err)
   }
   return buildSystemPrompt(DEFAULT_CLINIC)
 }
@@ -113,8 +116,17 @@ Just reply *call* or start chatting!`
     return twiml(greeting)
   }
 
-  // Append the user's message
-  const messages: Message[] = [...(session.messages ?? []), { role: 'user', content: body }]
+  // If the message contains a clinic ref and the session has a different clinic_id, update it
+  if (refClinicId && refClinicId !== session.clinic_id) {
+    await supabase
+      .from('whatsapp_sessions')
+      .update({ clinic_id: refClinicId, updated_at: new Date().toISOString() })
+      .eq('id', session.id)
+    session.clinic_id = refClinicId
+  }
+
+  // Append the clean user message (ref stripped) to history
+  const messages: Message[] = [...(session.messages ?? []), { role: 'user', content: body || rawBody }]
 
   // Check for call intent in any state
   if (wantsCall(body)) {

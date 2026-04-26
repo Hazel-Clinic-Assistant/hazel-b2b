@@ -271,7 +271,7 @@ export default function HomePage() {
 
   const waText = name.trim()
     ? `Hi, I'm ${name.trim()}${clinicId ? ` [ref:${clinicId}]` : ''}`
-    : clinicId ? `Hi [ref:${clinicId}]` : 'Hi'
+    : `Hi${clinicId ? ` [ref:${clinicId}]` : ''}`
   const waLink = `https://wa.me/14155238886?text=${encodeURIComponent(waText)}`
 
   return (

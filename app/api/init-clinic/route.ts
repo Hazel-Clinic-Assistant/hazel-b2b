@@ -162,14 +162,18 @@ ${pageContent}`,
     }
     console.log('[init-clinic] ✓', clinic.name, '| doctors:', clinic.doctors.length, '| treatments:', clinic.treatments.length)
 
-    // Deterministic ID from URL so repeat loads hit the same row
-    const clinicId = 'custom-' + createHash('sha256').update(normalized).digest('hex').slice(0, 12)
+    // 8-char deterministic ID from URL — short enough to show as a code
+    const clinicId = createHash('sha256').update(normalized).digest('hex').slice(0, 8)
 
+    // Store clinic data in Supabase Storage (no schema migration needed)
     const supabase = createServerClient()
-    await supabase.from('clinics').upsert(
-      { id: clinicId, name: clinic.name, data: clinic },
-      { onConflict: 'id' }
-    )
+    await supabase.storage
+      .from('intake-photos')
+      .upload(
+        `_configs/${clinicId}.json`,
+        new Blob([JSON.stringify(clinic)], { type: 'application/json' }),
+        { upsert: true }
+      )
 
     return NextResponse.json({ ok: true, clinic, clinicId })
   } catch (err) {
