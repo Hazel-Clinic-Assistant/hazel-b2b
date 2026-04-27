@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 
 const NAV_LINKS = [
-  { label: 'demo', href: '/' },
+  { label: 'demo', href: '/demo' },
   { label: 'dashboard', href: '/dashboard' },
   { label: 'intake form', href: '/intake?demo=true' },
   { label: 'hazel companion', href: '/passport' },
