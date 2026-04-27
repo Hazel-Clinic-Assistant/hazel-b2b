@@ -50,6 +50,35 @@ function LeafIcon({ className }: { className?: string }) {
   )
 }
 
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className ?? 'w-4 h-4'}>
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+
+function HourglassIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className ?? 'w-4 h-4'}>
+      <path d="M5 22h14" /><path d="M5 2h14" />
+      <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+      <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+    </svg>
+  )
+}
+
+function formatBookedDate(iso: string): string {
+  const d = new Date(iso)
+  const today = new Date()
+  const isToday =
+    d.getDate() === today.getDate() &&
+    d.getMonth() === today.getMonth() &&
+    d.getFullYear() === today.getFullYear()
+  if (isToday) return 'Today'
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
 function UrgencyPill({ urgency }: { urgency: string }) {
   const cls: Record<string, string> = {
     low: 'pill-low',
@@ -172,6 +201,8 @@ function DashboardContent() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [sendingInvite, setSendingInvite] = useState<string | null>(null)
   const [inviteSent, setInviteSent] = useState<Set<string>>(new Set())
+  const [resendingIntake, setResendingIntake] = useState<Set<string>>(new Set())
+  const [resentIntake, setResentIntake] = useState<Set<string>>(new Set())
 
   const submissionByBooking = (bookingId: string) =>
     submissions.find((s) => s.booking_id === bookingId)
@@ -251,6 +282,22 @@ function DashboardContent() {
     }
   }, [clinicParam])
 
+  const handleResendIntake = async (bookingId: string) => {
+    setResendingIntake((prev) => { const next = new Set(Array.from(prev)); next.add(bookingId); return next })
+    try {
+      const res = await fetch('/api/resend-intake', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId }),
+      })
+      if (res.ok) setResentIntake((prev) => { const next = new Set(Array.from(prev)); next.add(bookingId); return next })
+    } catch (err) {
+      console.error('[dashboard] resend intake error', err)
+    } finally {
+      setResendingIntake((prev) => { const next = new Set(Array.from(prev)); next.delete(bookingId); return next })
+    }
+  }
+
   const handleSendInvite = async (bookingId: string) => {
     setSendingInvite(bookingId)
     try {
@@ -297,7 +344,12 @@ function DashboardContent() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             { label: 'Bookings', value: bookings.length },
-            { label: 'Intake received', value: submissions.length },
+            {
+              label: 'Awaiting intake',
+              value: bookings.filter((b) => !b.intake_complete).length,
+              highlight: bookings.some((b) => !b.intake_complete),
+              amber: true,
+            },
             {
               label: 'High urgency',
               value: bookings.filter((b) => b.urgency === 'high').length,
@@ -307,15 +359,27 @@ function DashboardContent() {
               label: 'Companion linked',
               value: bookings.filter((b) => b.passport_linked).length,
             },
-          ].map(({ label, value, highlight }) => (
+          ].map(({ label, value, highlight, amber }) => (
             <div
               key={label}
-              className={`rounded-2xl border p-5 ${highlight ? 'border-red-200 bg-red-50' : 'border-hazel-cream bg-white'}`}
+              className={`rounded-2xl border p-5 ${
+                highlight && amber ? 'border-amber-200 bg-amber-50' :
+                highlight ? 'border-red-200 bg-red-50' :
+                'border-hazel-cream bg-white'
+              }`}
             >
-              <p className={`text-3xl font-light tabular-nums ${highlight ? 'text-red-700' : 'text-hazel-green'}`}>
+              <p className={`text-3xl font-light tabular-nums ${
+                highlight && amber ? 'text-amber-700' :
+                highlight ? 'text-red-700' :
+                'text-hazel-green'
+              }`}>
                 {value}
               </p>
-              <p className={`text-xs mt-1 ${highlight ? 'text-red-500' : 'text-hazel-muted/70'}`}>{label}</p>
+              <p className={`text-xs mt-1 ${
+                highlight && amber ? 'text-amber-500' :
+                highlight ? 'text-red-500' :
+                'text-hazel-muted/70'
+              }`}>{label}</p>
             </div>
           ))}
         </div>
@@ -365,7 +429,7 @@ function DashboardContent() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-hazel-cream bg-hazel-off-white">
-                    {['Patient', 'Concern', 'Urgency', 'Slot', 'WhatsApp', 'Companion'].map((h) => (
+                    {['Patient', 'Concern', 'Urgency', 'Slot', 'Booked', 'WhatsApp', 'Companion', 'Intake'].map((h) => (
                       <th key={h} className="text-left px-5 py-3 text-hazel-muted font-medium text-xs uppercase tracking-wider">
                         {h}
                       </th>
@@ -393,6 +457,9 @@ function DashboardContent() {
                             <UrgencyPill urgency={booking.urgency} />
                           </td>
                           <td className="px-5 py-3.5 text-hazel-muted">{booking.preferred_slot}</td>
+                          <td className="px-5 py-3.5 text-hazel-muted/60 text-xs whitespace-nowrap">
+                            {booking.created_at ? formatBookedDate(booking.created_at) : '—'}
+                          </td>
                           <td className="px-5 py-3.5">
                             <WhatsAppPill status={booking.whatsapp_status} />
                           </td>
@@ -403,10 +470,45 @@ function DashboardContent() {
                               <span className="text-hazel-cream/60 text-lg leading-none">—</span>
                             )}
                           </td>
+                          <td className="px-5 py-3.5">
+                            {booking.intake_complete
+                              ? <CheckIcon className="w-4 h-4 text-hazel-sage" />
+                              : <HourglassIcon className="w-4 h-4 text-amber-400" />}
+                          </td>
                         </tr>
                         {isExpanded && (
                           <tr key={`${booking.id}-detail`}>
-                            <td colSpan={6} className="px-5 py-5 bg-hazel-off-white/50 border-t border-hazel-cream/60">
+                            <td colSpan={8} className="px-5 py-5 bg-hazel-off-white/50 border-t border-hazel-cream/60">
+                              {/* Contact bar */}
+                              <div className="flex items-center gap-4 mb-4">
+                                {booking.phone && (
+                                  <a
+                                    href={`tel:${booking.phone}`}
+                                    className="flex items-center gap-1.5 text-sm text-hazel-green hover:text-hazel-sage transition-colors"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0">
+                                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.07 6.07l.97-.97a2 2 0 0 1 2.11-.45c.9.36 1.85.6 2.81.7A2 2 0 0 1 22 16.92z" />
+                                    </svg>
+                                    {booking.phone}
+                                  </a>
+                                )}
+                                {!booking.intake_complete && booking.phone && booking.preferred_slot && (
+                                  resentIntake.has(booking.id) ? (
+                                    <span className="text-xs text-hazel-sage">✓ Intake link resent</span>
+                                  ) : (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); if (!resendingIntake.has(booking.id)) handleResendIntake(booking.id) }}
+                                      disabled={resendingIntake.has(booking.id)}
+                                      className="flex items-center gap-1.5 text-xs font-medium border border-hazel-green text-hazel-green px-3 py-1.5 rounded-full hover:bg-hazel-green hover:text-hazel-cream transition-colors disabled:opacity-50"
+                                    >
+                                      {resendingIntake.has(booking.id) ? (
+                                        <><span className="w-3 h-3 rounded-full border-2 border-hazel-green/30 border-t-hazel-green animate-spin" />Sending…</>
+                                      ) : 'Resend intake form'}
+                                    </button>
+                                  )
+                                )}
+                              </div>
+
                               {submission ? (
                                 <IntakeDetail submission={submission} />
                               ) : (

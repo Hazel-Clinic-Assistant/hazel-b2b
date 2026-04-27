@@ -89,6 +89,24 @@ function PhoneIcon({ className }: { className?: string }) {
   )
 }
 
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className ?? 'w-4 h-4'}>
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+
+function HourglassIcon({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className ?? 'w-4 h-4'}>
+      <path d="M5 22h14" /><path d="M5 2h14" />
+      <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+      <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+    </svg>
+  )
+}
+
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className ?? 'w-5 h-5'}>
@@ -681,7 +699,7 @@ export default function HomePage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-hazel-cream bg-hazel-off-white">
-                {['Patient', 'Concern', 'Urgency', 'Slot', 'WhatsApp', 'Companion', ''].map((h) => (
+                {['Patient', 'Concern', 'Urgency', 'Slot', 'WhatsApp', 'Companion', 'Intake', ''].map((h) => (
                   <th key={h} className="text-left px-5 py-3 text-hazel-muted font-medium text-xs uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
@@ -715,13 +733,18 @@ export default function HomePage() {
                           ? <LeafIcon className="w-4 h-4 text-hazel-sage" />
                           : <span className="text-hazel-cream/60 text-lg leading-none">—</span>}
                       </td>
+                      <td className="px-5 py-3.5">
+                        {booking.intake_complete
+                          ? <CheckIcon className="w-4 h-4 text-hazel-sage" />
+                          : <HourglassIcon className="w-4 h-4 text-amber-400" />}
+                      </td>
                       <td className="px-5 py-3.5 text-hazel-muted/30 text-xs select-none">
                         {isExpanded ? '▲' : '▼'}
                       </td>
                     </tr>
                     {isExpanded && (
                       <tr key={`${booking.id}-detail`}>
-                        <td colSpan={7} className="px-5 py-5 bg-hazel-off-white/60 border-t border-hazel-cream/60">
+                        <td colSpan={8} className="px-5 py-5 bg-hazel-off-white/60 border-t border-hazel-cream/60">
                           <div className="space-y-4">
                             <div>
                               <p className="text-[10px] font-medium text-hazel-muted/60 uppercase tracking-widest mb-3">What hazel learnt on the call</p>
@@ -815,7 +838,7 @@ export default function HomePage() {
               })}
               {bookings.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-8 px-5 text-center text-hazel-muted/40 text-xs">
+                  <td colSpan={8} className="py-8 px-5 text-center text-hazel-muted/40 text-xs">
                     Call or message hazel above to create a live booking — it will appear here instantly.
                   </td>
                 </tr>
