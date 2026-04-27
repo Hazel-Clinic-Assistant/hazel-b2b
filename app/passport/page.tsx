@@ -60,6 +60,16 @@ function NoBookingState() {
   )
 }
 
+type IntakeSummary = {
+  skin_type: string
+  fitzpatrick_scale: number | null
+  primary_concern: string
+  concern_duration: string
+  previous_treatments: string
+  allergies: string
+  current_medications: string
+}
+
 function PassportContent() {
   const searchParams = useSearchParams()
   const bookingId = searchParams.get('bookingId')
@@ -73,6 +83,7 @@ function PassportContent() {
   const [activating, setActivating] = useState(false)
   const [error, setError] = useState('')
   const [inviteSent, setInviteSent] = useState(false)
+  const [intake, setIntake] = useState<IntakeSummary | null>(null)
 
   useEffect(() => {
     if (!bookingId) return
@@ -91,6 +102,12 @@ function PassportContent() {
           if (data.passport_linked) setActivated(true)
         }
       })
+    supabase
+      .from('intake_submissions')
+      .select('skin_type, fitzpatrick_scale, primary_concern, concern_duration, previous_treatments, allergies, current_medications')
+      .eq('booking_id', bookingId)
+      .single()
+      .then(({ data }) => { if (data) setIntake(data) })
   }, [bookingId])
 
   const handleActivate = async () => {
@@ -197,14 +214,72 @@ function PassportContent() {
               <p className="text-[10px] uppercase tracking-widest text-hazel-muted/50 mb-4">
                 What your clinician will see
               </p>
-              <ul className="space-y-3">
-                {SHARED_DATA.map((item) => (
-                  <li key={item} className="flex items-start gap-2.5 text-sm text-hazel-muted">
+              {intake ? (
+                <dl className="space-y-3">
+                  {intake.primary_concern && (
+                    <div className="flex gap-2.5">
+                      <span className="mt-0.5 text-hazel-sage flex-shrink-0"><CheckIcon /></span>
+                      <div>
+                        <dt className="text-[10px] uppercase tracking-widest text-hazel-muted/50">Primary concern</dt>
+                        <dd className="text-sm text-hazel-muted">{intake.primary_concern}{intake.concern_duration ? ` · ${intake.concern_duration}` : ''}</dd>
+                      </div>
+                    </div>
+                  )}
+                  {intake.skin_type && (
+                    <div className="flex gap-2.5">
+                      <span className="mt-0.5 text-hazel-sage flex-shrink-0"><CheckIcon /></span>
+                      <div>
+                        <dt className="text-[10px] uppercase tracking-widest text-hazel-muted/50">Skin type</dt>
+                        <dd className="text-sm text-hazel-muted capitalize">{intake.skin_type}{intake.fitzpatrick_scale ? ` · Fitzpatrick Type ${intake.fitzpatrick_scale}` : ''}</dd>
+                      </div>
+                    </div>
+                  )}
+                  {intake.previous_treatments && (
+                    <div className="flex gap-2.5">
+                      <span className="mt-0.5 text-hazel-sage flex-shrink-0"><CheckIcon /></span>
+                      <div>
+                        <dt className="text-[10px] uppercase tracking-widest text-hazel-muted/50">Previous treatments</dt>
+                        <dd className="text-sm text-hazel-muted">{intake.previous_treatments}</dd>
+                      </div>
+                    </div>
+                  )}
+                  {intake.allergies && (
+                    <div className="flex gap-2.5">
+                      <span className="mt-0.5 text-hazel-sage flex-shrink-0"><CheckIcon /></span>
+                      <div>
+                        <dt className="text-[10px] uppercase tracking-widest text-hazel-muted/50">Allergies</dt>
+                        <dd className="text-sm text-hazel-muted">{intake.allergies}</dd>
+                      </div>
+                    </div>
+                  )}
+                  {intake.current_medications && (
+                    <div className="flex gap-2.5">
+                      <span className="mt-0.5 text-hazel-sage flex-shrink-0"><CheckIcon /></span>
+                      <div>
+                        <dt className="text-[10px] uppercase tracking-widest text-hazel-muted/50">Current medications</dt>
+                        <dd className="text-sm text-hazel-muted">{intake.current_medications}</dd>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex gap-2.5">
                     <span className="mt-0.5 text-hazel-sage flex-shrink-0"><CheckIcon /></span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+                    <div className="text-sm text-hazel-muted">Skin progress photos and journal entries</div>
+                  </div>
+                  <div className="flex gap-2.5">
+                    <span className="mt-0.5 text-hazel-sage flex-shrink-0"><CheckIcon /></span>
+                    <div className="text-sm text-hazel-muted">Personalised Derm report</div>
+                  </div>
+                </dl>
+              ) : (
+                <ul className="space-y-3">
+                  {SHARED_DATA.map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-hazel-muted">
+                      <span className="mt-0.5 text-hazel-sage flex-shrink-0"><CheckIcon /></span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
               <p className="mt-4 text-xs text-hazel-muted/50 border-t border-hazel-sage/10 pt-4">
                 No forms to fill in. No uploads. Your clinician arrives prepared — you arrive confident.
               </p>

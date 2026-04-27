@@ -234,6 +234,13 @@ export default function HomePage() {
 
   useEffect(() => { loadBookings() }, [loadBookings])
 
+  // Re-fetch when the user returns to this tab (e.g. after completing intake in another tab)
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') loadBookings() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [loadBookings])
+
   useEffect(() => {
     const supabase = createBrowserClient()
     const channel = supabase.channel('demo-bookings')
@@ -303,14 +310,15 @@ export default function HomePage() {
         phone: phone.trim(),
       }
 
-      overrides.variableValues = {
-        patient_name: name.trim(),
-        patient_phone: phone.trim(),
-      }
-
       // Always greet by name so hazel doesn't ask for it on the call
       const fn = name.trim().split(' ')[0]
       const clinicName = clinicData?.name ?? activeClinic.name
+
+      overrides.variableValues = {
+        patient_name: name.trim(),
+        patient_phone: phone.trim(),
+        clinicName,
+      }
       overrides.firstMessage = fn
         ? `Hi ${fn}! It's hazel — the AI receptionist for ${clinicName}. What brings you in today?`
         : `Hi! It's hazel — the AI receptionist for ${clinicName}. What can I help you with today?`

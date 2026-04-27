@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
     .eq('id', clinicId)
     .single()
 
+  // Use DB clinic name if available, then variableValues, then clinicId as last resort
+  const clinicName = clinic?.name ?? vars.clinicName ?? clinicId
+
   const { data: booking, error } = await supabase
     .from('bookings')
     .insert({
@@ -75,14 +78,14 @@ export async function POST(request: NextRequest) {
         await sendWhatsAppConfirmation(
           phone,
           patient_name,
-          clinic?.name ?? clinicId,
+          clinicName,
           clinic?.address ?? '',
           confirmedSlot,
           booking.id
         )
       } else {
         // No slot confirmed — send intake link + clinic will follow up
-        await sendWhatsAppSlotFollowUp(phone, patient_name, skin_concern, booking.id, clinic?.name ?? clinicId)
+        await sendWhatsAppSlotFollowUp(phone, patient_name, skin_concern, booking.id, clinicName)
       }
       await supabase
         .from('bookings')
