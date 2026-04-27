@@ -118,7 +118,6 @@ export default function LandingPage() {
   const router = useRouter()
   const formRef = useRef<HTMLDivElement>(null)
 
-  const [clinicName, setClinicName] = useState('')
   const [contactName, setContactName] = useState('')
   const [clinicUrl, setClinicUrl] = useState('')
   const [email, setEmail] = useState('')
@@ -135,7 +134,6 @@ export default function LandingPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clinicName: clinicName.trim(),
           name: contactName.trim(),
           clinicUrl: clinicUrl.trim(),
           email: email.trim(),
@@ -147,7 +145,7 @@ export default function LandingPage() {
     router.push('/demo?clinicUrl=' + encodeURIComponent(clinicUrl.trim()))
   }
 
-  const formComplete = clinicName.trim().length > 0 && contactName.trim().length > 0 && clinicUrl.trim().length > 0 && email.trim().length > 0
+  const formComplete = contactName.trim().length > 0 && clinicUrl.trim().length > 0 && email.trim().length > 0
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#1e1c1a' }}>
@@ -301,7 +299,6 @@ export default function LandingPage() {
 
           <div className="rounded-2xl p-8 space-y-4" style={{ backgroundColor: '#2B2624', border: '1px solid rgba(231,222,211,0.1)' }}>
             {[
-              { label: 'Clinic name', value: clinicName, setter: setClinicName, type: 'text', placeholder: 'e.g. Harley Street Skin Clinic' },
               { label: 'Your name', value: contactName, setter: setContactName, type: 'text', placeholder: 'e.g. Dr. Sarah Collins' },
               { label: 'Clinic URL', value: clinicUrl, setter: setClinicUrl, type: 'url', placeholder: 'e.g. https://yourskinclinic.com' },
               { label: 'Email address', value: email, setter: setEmail, type: 'email', placeholder: 'you@yourclinic.com' },
