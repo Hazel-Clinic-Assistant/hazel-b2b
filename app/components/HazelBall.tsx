@@ -32,24 +32,10 @@ export function HazelBall() {
       vapiRef.current = vapi
 
       vapi.on('call-start', () => setState('speaking'))
+      vapi.on('call-end', () => { setState('done'); vapiRef.current = null })
+      vapi.on('error', (err: unknown) => { console.error('[vapi]', err); setState('orbiting'); vapiRef.current = null })
 
-      vapi.on('speech-end', () => {
-        setTimeout(() => vapiRef.current?.stop(), 700)
-      })
-
-      vapi.on('call-end', () => {
-        setState('done')
-        vapiRef.current = null
-      })
-
-      vapi.on('error', () => {
-        setState('orbiting')
-        vapiRef.current = null
-      })
-
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, {
-        firstMessage: "Hello! I'm Hazel — your clinic's always-on virtual assistant. I handle bookings, patient intake, and follow-up care so your team can focus on what matters most.",
-      })
+      await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!)
     } catch {
       setState('orbiting')
     }
@@ -164,7 +150,7 @@ export function HazelBall() {
                 className="text-hazel-cream text-base font-medium tracking-wide"
                 style={{ animation: 'click-pulse 2s ease-in-out infinite' }}
               >
-                Click to meet Hazel
+                Click to meet hazel
               </span>
               <span
                 className="text-hazel-sage text-xl"
@@ -179,7 +165,7 @@ export function HazelBall() {
           )}
           {state === 'speaking' && (
             <p className="text-hazel-sage text-sm font-medium tracking-wide" style={{ animation: 'click-pulse 1.5s ease-in-out infinite' }}>
-              hazel is speaking
+              hazel is listening
             </p>
           )}
           {state === 'done' && (

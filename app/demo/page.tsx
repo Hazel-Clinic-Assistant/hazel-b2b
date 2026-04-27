@@ -282,17 +282,20 @@ export default function HomePage() {
       const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY!)
       vapi.on('call-start', () => setVapiState('active'))
       vapi.on('call-end', () => { setVapiState('ended'); vapiRef.current = null })
-      vapi.on('error', () => { setVapiState('idle'); vapiRef.current = null })
+      vapi.on('error', (err: unknown) => { console.error('[vapi]', err); setVapiState('idle'); vapiRef.current = null })
       vapiRef.current = vapi
 
-      // Build overrides — always include name; add clinic system prompt if custom clinic loaded
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const overrides: Record<string, any> = {}
       if (name.trim()) {
         overrides.variableValues = { patient_name: name.trim() }
       }
       if (clinicData) {
+        // Fetch full model config before overriding — VAPI requires the complete provider spec
+        const modelRes = await fetch('/api/get-assistant-model')
+        const modelData = await modelRes.json()
         overrides.model = {
+          ...modelData.model,
           messages: [{ role: 'system', content: buildSystemPrompt(clinicData) }],
         }
         const fn = name.trim().split(' ')[0]
@@ -302,7 +305,8 @@ export default function HomePage() {
       }
 
       await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, Object.keys(overrides).length ? overrides : undefined)
-    } catch {
+    } catch (err) {
+      console.error('[vapi] start failed', err)
       setVapiState('idle')
     }
   }
