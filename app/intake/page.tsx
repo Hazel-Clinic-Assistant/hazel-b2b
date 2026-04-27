@@ -292,13 +292,25 @@ function IntakeFormContent() {
             <p className="text-hazel-muted max-w-sm mb-2">
               Your intake form has been received by <strong>{clinicName}</strong>.
             </p>
-            <p className="text-hazel-muted/60 text-sm max-w-sm mb-4">
+            <p className="text-hazel-muted/60 text-sm max-w-sm mb-8">
               Your clinician will review your skin history before your appointment. See you soon.
             </p>
-            {companionEmailSent && form.companionEmail && (
-              <p className="text-xs text-hazel-green bg-hazel-mint/50 border border-hazel-sage/20 rounded-xl px-4 py-2 max-w-sm">
-                Companion invite sent to {form.companionEmail}
-              </p>
+            {bookingId && (
+              <div className="bg-white border border-hazel-cream rounded-2xl px-6 py-5 max-w-sm text-left">
+                <div className="flex items-center gap-2 mb-2">
+                  <LeafIcon className="w-4 h-4 text-hazel-sage shrink-0" />
+                  <p className="text-sm font-medium text-hazel-green">hazel skin companion</p>
+                </div>
+                <p className="text-xs text-hazel-muted leading-relaxed mb-4">
+                  Track your skin progress, view your history, and stay connected with your clinician between visits.
+                </p>
+                <a
+                  href={`/passport?bookingId=${bookingId}`}
+                  className="block w-full text-center bg-hazel-green text-hazel-cream py-2.5 rounded-full text-sm font-medium hover:bg-hazel-green-light transition-colors"
+                >
+                  Activate your skin companion →
+                </a>
+              </div>
             )}
           </>
         )}

@@ -16,7 +16,6 @@ export async function sendWhatsAppConfirmation(
 ) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
   const intakeLink = `${appUrl}/intake?bookingId=${bookingId}`
-  const passportLink = `${appUrl}/passport?bookingId=${bookingId}`
 
   const slotLine = slot ? `📅 ${slot}\n` : ''
   const addressLine = clinicAddress ? `📍 ${clinicAddress}\n` : ''
@@ -28,9 +27,6 @@ Great news — your booking at ${clinicName} has been received and we're looking
 ${slotLine}${addressLine}
 Before your visit, please take a few minutes to complete your skin intake form:
 ${intakeLink}
-
-You can also link your hazel skin passport so your clinician has your full history ready:
-${passportLink}
 
 Reply anytime if you have questions — I'm here to help.
 
@@ -46,33 +42,24 @@ Reply anytime if you have questions — I'm here to help.
 export async function sendWhatsAppSlotFollowUp(
   to: string,
   patientName: string,
-  skinConcern: string
+  skinConcern: string,
+  bookingId: string,
+  clinicName: string
 ) {
-  // Generate the next four weekday slots from today
-  const doctors = ['Dr. Nikita Desai', 'Dr. Aamer Khan', 'Dr. Nikita Desai', 'Dr. Aamer Khan']
-  const times = ['10:00am', '2:00pm', '11:00am', '3:00pm']
-  const slots: string[] = []
-  const d = new Date()
-  let found = 0
-  while (found < 4) {
-    d.setDate(d.getDate() + 1)
-    const dow = d.getDay()
-    if (dow === 0 || dow === 6) continue // skip weekends
-    const label = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
-    slots.push(`• ${label}, ${times[found]} — ${doctors[found]}`)
-    found++
-  }
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  const intakeLink = `${appUrl}/intake?bookingId=${bookingId}`
 
   const concernLine = skinConcern ? ` about your ${skinConcern}` : ''
   const name = patientName ? ` ${patientName}` : ''
 
   const body = `Hi${name}! 🌿 Thanks for chatting with hazel.
 
-No worries about not locking in a slot on the call — here are our next available appointments at Harley Street Skin Clinic${concernLine}:
+No worries about not locking in a slot on the call — the team at ${clinicName} will be in touch to confirm your appointment${concernLine}.
 
-${slots.join('\n')}
+In the meantime, please complete your skin intake form so your clinician is prepared:
+${intakeLink}
 
-Just reply with the one that suits you and I'll get it confirmed straight away. Or call us directly on 0207 436 4441.
+Reply anytime if you have questions.
 
 — hazel`
 
@@ -107,11 +94,9 @@ export async function sendWhatsAppReminder(
   clinicName: string,
   slot: string
 ) {
-  const body = `Hi ${patientName}! 🌿
+  const body = `Hi${patientName ? ` ${patientName}` : ''}! 🌿
 
-Just a gentle reminder — your appointment at ${clinicName} is tomorrow.
-
-📅 ${slot}
+Just a gentle reminder — your appointment at ${clinicName || 'the clinic'} is tomorrow.${slot ? `\n\n📅 ${slot}` : ''}
 
 We look forward to seeing you.
 

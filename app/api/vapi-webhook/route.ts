@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
           booking.id
         )
       } else {
-        // No slot confirmed — send available slots + intake link
-        await sendWhatsAppSlotFollowUp(phone, patient_name, skin_concern)
+        // No slot confirmed — send intake link + clinic will follow up
+        await sendWhatsAppSlotFollowUp(phone, patient_name, skin_concern, booking.id, clinic?.name ?? clinicId)
       }
       await supabase
         .from('bookings')
