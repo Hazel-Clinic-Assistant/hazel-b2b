@@ -116,7 +116,7 @@ function IntakeFormContent() {
     const supabase = createBrowserClient()
     supabase
       .from('bookings')
-      .select('clinic_id, patient_name, phone, clinics(name)')
+      .select('clinic_id, patient_name, phone, skin_concern, clinics(name)')
       .eq('id', bookingId)
       .single()
       .then(({ data }) => {
@@ -127,6 +127,7 @@ function IntakeFormContent() {
             ...f,
             fullName: data.patient_name ?? '',
             phone: data.phone ?? '',
+            primaryConcern: data.skin_concern ?? '',
           }))
         }
       })
