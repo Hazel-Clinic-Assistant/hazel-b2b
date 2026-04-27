@@ -32,10 +32,13 @@ export function HazelBall() {
       vapiRef.current = vapi
 
       vapi.on('call-start', () => setState('speaking'))
+      vapi.on('speech-end', () => { setTimeout(() => { vapiRef.current?.stop() }, 500) })
       vapi.on('call-end', () => { setState('done'); vapiRef.current = null })
       vapi.on('error', (err: unknown) => { console.error('[vapi]', err); setState('orbiting'); vapiRef.current = null })
 
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!)
+      await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, {
+        firstMessage: "Hi there! I'm hazel — an AI receptionist built for skin clinics. I handle bookings, patient intake, and follow-up care so your team can focus on what matters most. Click 'get started' below to see me in action.",
+      })
     } catch {
       setState('orbiting')
     }
@@ -165,7 +168,7 @@ export function HazelBall() {
           )}
           {state === 'speaking' && (
             <p className="text-hazel-sage text-sm font-medium tracking-wide" style={{ animation: 'click-pulse 1.5s ease-in-out infinite' }}>
-              hazel is listening
+              hazel is speaking
             </p>
           )}
           {state === 'done' && (
