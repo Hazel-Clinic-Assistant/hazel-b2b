@@ -135,8 +135,37 @@ export default function HomePage() {
   const [clinicData, setClinicData] = useState<ClinicData | null>(null)
   const [clinicId, setClinicId] = useState<string | null>(null)
 
-  // Restore custom clinic from localStorage so page refresh doesn't lose the ref
+  const startSetup = useCallback(async (url: string) => {
+    setClinicUrl(url)
+    setSetupState('loading')
+    setSetupError('')
+    try {
+      const res = await fetch('/api/init-clinic', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.clinic) throw new Error(data.error ?? 'Failed to load clinic')
+      setClinicData(data.clinic)
+      setClinicId(data.clinicId ?? null)
+      localStorage.setItem('hazel_clinic_id', data.clinicId ?? '')
+      localStorage.setItem('hazel_clinic_data', JSON.stringify(data.clinic))
+      setSetupState('done')
+    } catch (err) {
+      setSetupError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setSetupState('error')
+    }
+  }, [])
+
+  // Restore custom clinic from localStorage; URL param takes precedence
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlParam = params.get('clinicUrl')
+    if (urlParam) {
+      startSetup(urlParam)
+      return
+    }
     const savedId = localStorage.getItem('hazel_clinic_id')
     const savedData = localStorage.getItem('hazel_clinic_data')
     if (savedId && savedData) {
@@ -146,7 +175,7 @@ export default function HomePage() {
         setSetupState('done')
       } catch {}
     }
-  }, [])
+  }, [startSetup])
 
   // Shared name + phone
   const [name, setName] = useState('')
@@ -222,25 +251,7 @@ export default function HomePage() {
 
   const handleSetupClinic = async () => {
     if (!clinicUrl.trim()) return
-    setSetupState('loading')
-    setSetupError('')
-    try {
-      const res = await fetch('/api/init-clinic', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: clinicUrl.trim() }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.clinic) throw new Error(data.error ?? 'Failed to load clinic')
-      setClinicData(data.clinic)
-      setClinicId(data.clinicId ?? null)
-      localStorage.setItem('hazel_clinic_id', data.clinicId ?? '')
-      localStorage.setItem('hazel_clinic_data', JSON.stringify(data.clinic))
-      setSetupState('done')
-    } catch (err) {
-      setSetupError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
-      setSetupState('error')
-    }
+    await startSetup(clinicUrl.trim())
   }
 
   const handleRequestCallback = async () => {
@@ -310,7 +321,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-hazel-off-white">
-      <NavHeader subtitle={activeClinic.name} />
+      <NavHeader subtitle={clinicData?.name} />
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <section className="bg-hazel-off-white px-6 pt-24 pb-20 text-center">
@@ -363,6 +374,13 @@ export default function HomePage() {
                 </button>
               </div>
             </div>
+          ) : setupState === 'loading' ? (
+            <div className="text-center space-y-2">
+              <p className="text-sm text-hazel-muted/70 animate-pulse">
+                Setting up your demo — reading {clinicUrl || 'your clinic website'}…
+              </p>
+              <p className="text-xs text-hazel-muted/40">Extracting doctors, treatments & hours</p>
+            </div>
           ) : (
             <div className="space-y-2">
               <div className="flex gap-2">
@@ -373,34 +391,21 @@ export default function HomePage() {
                   onKeyDown={(e) => e.key === 'Enter' && handleSetupClinic()}
                   placeholder="Enter your clinic website — e.g. https://yourskinclinic.com"
                   className="hazel-input flex-1 text-sm"
-                  disabled={setupState === 'loading'}
                 />
                 <button
                   onClick={handleSetupClinic}
-                  disabled={setupState === 'loading' || !clinicUrl.trim()}
+                  disabled={!clinicUrl.trim()}
                   className="shrink-0 bg-hazel-green text-hazel-cream px-5 py-2.5 rounded-full text-sm font-medium hover:bg-hazel-green-light transition-colors disabled:opacity-50 whitespace-nowrap"
                 >
-                  {setupState === 'loading' ? (
-                    <span className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full border-2 border-hazel-cream/30 border-t-hazel-cream animate-spin" />
-                      Reading…
-                    </span>
-                  ) : 'Set up my demo →'}
+                  Set up my demo →
                 </button>
               </div>
-              {setupState === 'loading' && (
-                <p className="text-xs text-hazel-muted/60 text-center animate-pulse">
-                  Reading your clinic website and extracting doctors, treatments & hours…
-                </p>
-              )}
               {setupState === 'error' && (
                 <p className="text-xs text-red-500 text-center">{setupError}</p>
               )}
-              {setupState === 'idle' && (
-                <p className="text-xs text-hazel-muted/40 text-center">
-                  Or scroll down to try the live demo with Harley Street Skin Clinic ↓
-                </p>
-              )}
+              <p className="text-xs text-hazel-muted/40 text-center">
+                Or scroll down to try the live demo with Harley Street Skin Clinic ↓
+              </p>
             </div>
           )}
         </div>

@@ -72,42 +72,42 @@ const LIFECYCLE_STAGES = [
     step: '01',
     icon: PhoneIcon,
     title: 'Booking & reception',
-    body: 'Hazel answers calls and WhatsApp messages 24/7 — collecting patient details, understanding their concern, and booking the right slot. No missed calls. No hold music. No after-hours gap.',
+    body: 'hazel answers calls and WhatsApp messages 24/7 — collecting patient details, understanding their concern, and booking the right slot. No missed calls. No hold music. No after-hours gap.',
   },
   {
     step: '02',
     icon: BellIcon,
     title: 'Pre-visit follow-up',
-    body: 'Hazel sends personalised reminders before each appointment, along with preparation instructions tailored to the treatment. Patients arrive ready. Cancellations drop.',
+    body: 'hazel sends personalised reminders before each appointment, along with preparation instructions tailored to the treatment. Patients arrive ready. Cancellations drop.',
   },
   {
     step: '03',
     icon: ClipboardIcon,
     title: 'Complete patient intake',
-    body: 'After booking, Hazel sends a digital intake form via WhatsApp. By the time your patient walks in, your team has their full medical history, skin type, concerns, medications, and photos — without a single paper form.',
+    body: 'After booking, hazel sends a digital intake form via WhatsApp. By the time your patient walks in, your team has their full medical history, skin type, concerns, medications, and photos — without a single paper form.',
   },
   {
     step: '04',
     icon: PillIcon,
     title: 'Post-consultation care',
-    body: 'Hazel follows up automatically after each visit — sending medication schedules, aftercare instructions, and check-in messages. Patients feel supported. Compliance improves. Reviews follow.',
+    body: 'hazel follows up automatically after each visit — sending medication schedules, aftercare instructions, and check-in messages. Patients feel supported. Compliance improves. Reviews follow.',
   },
   {
     step: '05',
     icon: CameraIcon,
     title: 'AI photo check-ins',
-    body: 'Patients submit progress photos at regular intervals through Hazel. The AI analyses improvement, tracks results over time, and flags cases that may need clinical attention — giving your team visibility between visits.',
+    body: 'Patients submit progress photos at regular intervals through hazel. The AI analyses improvement, tracks results over time, and flags cases that may need clinical attention — giving your team visibility between visits.',
   },
   {
     step: '06',
     icon: RefreshIcon,
     title: 'Lifelong patient relationship',
-    body: 'Hazel prompts rebooking at the right moment, celebrates patient milestones, and keeps the relationship warm between visits. One-time appointments become long-term retention.',
+    body: 'hazel prompts rebooking at the right moment, celebrates patient milestones, and keeps the relationship warm between visits. One-time appointments become long-term retention.',
   },
 ]
 
 const PAIN_POINTS = [
-  { before: 'Calls go to voicemail after hours', after: 'Hazel answers every call, 24/7' },
+  { before: 'Calls go to voicemail after hours', after: 'hazel answers every call, 24/7' },
   { before: 'Paper intake forms before appointments', after: 'Digital intake collected automatically via WhatsApp' },
   { before: 'Manual follow-up calls after consultations', after: 'Automated care reminders and check-ins' },
   { before: 'No visibility between appointments', after: 'AI photo tracking and progress reports' },
@@ -120,6 +120,7 @@ export default function LandingPage() {
 
   const [clinicName, setClinicName] = useState('')
   const [contactName, setContactName] = useState('')
+  const [clinicUrl, setClinicUrl] = useState('')
   const [email, setEmail] = useState('')
 
   const scrollToForm = () => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -135,17 +136,18 @@ export default function LandingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clinicName: clinicName.trim(),
-          contactName: contactName.trim(),
+          name: contactName.trim(),
+          clinicUrl: clinicUrl.trim(),
           email: email.trim(),
         }),
       })
     } catch {
       // silently continue — don't block the user if the save fails
     }
-    router.push('/demo')
+    router.push('/demo?clinicUrl=' + encodeURIComponent(clinicUrl.trim()))
   }
 
-  const formComplete = clinicName.trim().length > 0 && contactName.trim().length > 0 && email.trim().length > 0
+  const formComplete = clinicName.trim().length > 0 && contactName.trim().length > 0 && clinicUrl.trim().length > 0 && email.trim().length > 0
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#1e1c1a' }}>
@@ -184,7 +186,7 @@ export default function LandingPage() {
           From first call<br className="hidden sm:block" /> to lifelong patient.
         </h1>
         <p className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10" style={{ color: 'rgba(231,222,211,0.55)' }}>
-          Hazel is the complete patient management system for skin clinics — handling everything from the first booking call to long-term follow-up, automatically.
+          hazel is the complete patient management system for skin clinics — handling everything from the first booking call to long-term follow-up, automatically.
         </p>
 
         <div className="flex items-center justify-center">
@@ -204,7 +206,7 @@ export default function LandingPage() {
       <section className="px-6 py-16 border-y" style={{ backgroundColor: '#2B2624', borderColor: 'rgba(231,222,211,0.07)' }}>
         <div className="max-w-3xl mx-auto">
           <p className="text-center text-xs uppercase tracking-[0.2em] mb-10" style={{ color: 'rgba(167,184,160,0.5)' }}>
-            The gap Hazel fills
+            The gap hazel fills
           </p>
           <div className="space-y-3">
             {PAIN_POINTS.map(({ before, after }) => (
@@ -264,9 +266,9 @@ export default function LandingPage() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[
-              { step: '01', title: 'Connect your clinic', body: 'Enter your clinic details and we set up Hazel with your services, team, and availability. Takes minutes, not days.' },
-              { step: '02', title: 'Activate your channels', body: 'Hazel connects to your WhatsApp number and phone line. Patients reach Hazel through the same channels they already use.' },
-              { step: '03', title: 'Hazel runs the rest', body: 'From the first patient message to the follow-up six months later — Hazel handles every touchpoint while you focus on delivering exceptional care.' },
+              { step: '01', title: 'Connect your clinic', body: 'Enter your clinic details and we set up hazel with your services, team, and availability. Takes minutes, not days.' },
+              { step: '02', title: 'Activate your channels', body: 'hazel connects to your WhatsApp number and phone line. Patients reach hazel through the same channels they already use.' },
+              { step: '03', title: 'hazel runs the rest', body: 'From the first patient message to the follow-up six months later — hazel handles every touchpoint while you focus on delivering exceptional care.' },
             ].map(({ step, title, body }) => (
               <div key={step} className="flex gap-5">
                 <span className="text-4xl font-thin leading-none shrink-0 tabular-nums" style={{ color: 'rgba(167,184,160,0.2)' }}>{step}</span>
@@ -290,7 +292,7 @@ export default function LandingPage() {
               </div>
             </div>
             <h2 className="hazel-wordmark font-light text-3xl md:text-4xl tracking-tight mb-3" style={{ color: '#E7DED3' }}>
-              See Hazel in action
+              See hazel in action
             </h2>
             <p className="text-base leading-relaxed" style={{ color: 'rgba(231,222,211,0.5)' }}>
               Enter your clinic details to open a live demo — no setup required.
@@ -298,32 +300,31 @@ export default function LandingPage() {
           </div>
 
           <div className="rounded-2xl p-8 space-y-4" style={{ backgroundColor: '#2B2624', border: '1px solid rgba(231,222,211,0.1)' }}>
-            {(['Clinic name', 'Your name', 'Email address'] as const).map((label) => {
-              const isEmail = label === 'Email address'
-              const value = label === 'Clinic name' ? clinicName : label === 'Your name' ? contactName : email
-              const setter = label === 'Clinic name' ? setClinicName : label === 'Your name' ? setContactName : setEmail
-              const placeholder = label === 'Clinic name' ? 'e.g. Harley Street Skin Clinic' : label === 'Your name' ? 'e.g. Dr. Sarah Collins' : 'you@yourclinic.com'
-              return (
-                <div key={label}>
-                  <label className="block text-xs uppercase tracking-wider mb-2" style={{ color: 'rgba(167,184,160,0.6)' }}>{label}</label>
-                  <input
-                    type={isEmail ? 'email' : 'text'}
-                    value={value}
-                    onChange={e => setter(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && formComplete && handleOpenDemo()}
-                    placeholder={placeholder}
-                    className="w-full px-4 py-3 rounded-xl text-sm transition-colors focus:outline-none"
-                    style={{
-                      backgroundColor: 'rgba(0,0,0,0.25)',
-                      border: '1px solid rgba(231,222,211,0.12)',
-                      color: '#E7DED3',
-                    }}
-                    onFocus={e => { e.currentTarget.style.borderColor = 'rgba(167,184,160,0.5)' }}
-                    onBlur={e => { e.currentTarget.style.borderColor = 'rgba(231,222,211,0.12)' }}
-                  />
-                </div>
-              )
-            })}
+            {[
+              { label: 'Clinic name', value: clinicName, setter: setClinicName, type: 'text', placeholder: 'e.g. Harley Street Skin Clinic' },
+              { label: 'Your name', value: contactName, setter: setContactName, type: 'text', placeholder: 'e.g. Dr. Sarah Collins' },
+              { label: 'Clinic URL', value: clinicUrl, setter: setClinicUrl, type: 'url', placeholder: 'e.g. https://yourskinclinic.com' },
+              { label: 'Email address', value: email, setter: setEmail, type: 'email', placeholder: 'you@yourclinic.com' },
+            ].map(({ label, value, setter, type, placeholder }) => (
+              <div key={label}>
+                <label className="block text-xs uppercase tracking-wider mb-2" style={{ color: 'rgba(167,184,160,0.6)' }}>{label}</label>
+                <input
+                  type={type}
+                  value={value}
+                  onChange={e => setter(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && formComplete && handleOpenDemo()}
+                  placeholder={placeholder}
+                  className="w-full px-4 py-3 rounded-xl text-sm transition-colors focus:outline-none"
+                  style={{
+                    backgroundColor: 'rgba(0,0,0,0.25)',
+                    border: '1px solid rgba(231,222,211,0.12)',
+                    color: '#E7DED3',
+                  }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'rgba(167,184,160,0.5)' }}
+                  onBlur={e => { e.currentTarget.style.borderColor = 'rgba(231,222,211,0.12)' }}
+                />
+              </div>
+            ))}
 
             <div className="pt-2">
               <button
@@ -344,7 +345,7 @@ export default function LandingPage() {
                 ) : 'Open demo →'}
               </button>
               {!formComplete && (
-                <p className="text-xs text-center mt-3" style={{ color: 'rgba(231,222,211,0.25)' }}>Fill in all fields to continue</p>
+                <p className="text-xs text-center mt-3" style={{ color: 'rgba(231,222,211,0.25)' }}>Enter your name and clinic URL to continue</p>
               )}
             </div>
           </div>

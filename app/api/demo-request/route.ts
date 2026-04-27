@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 
 export async function POST(req: NextRequest) {
-  const { clinicName, contactName, email } = await req.json()
+  const { clinicName, name, clinicUrl, email } = await req.json()
 
-  if (!clinicName || !contactName || !email) {
+  if (!clinicName || !name || !clinicUrl || !email) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
 
   const supabase = createServerClient()
   const { error } = await supabase.from('demo_requests').insert({
     clinic_name: clinicName,
-    contact_name: contactName,
+    name,
+    clinic_url: clinicUrl,
     email,
   })
 
