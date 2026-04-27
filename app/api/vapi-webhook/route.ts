@@ -21,12 +21,19 @@ export async function POST(request: NextRequest) {
 
   const structured = body.message.analysis?.structuredData ?? {}
   const meta = body.message.call?.metadata ?? {}
+  // variableValues are set by our UI and survive the web SDK — most reliable source
+  const vars = body.message.call?.assistantOverrides?.variableValues ?? {}
   const { urgency } = structured
-  // Prefer metadata (UI-entered, exact) over structured data (transcription, error-prone)
-  const patient_name: string = meta.patient_name || structured.patient_name || ''
-  const skin_concern: string = structured.skin_concern || meta.skin_concern || ''
-  const phone: string = meta.phone || structured.phone || ''
-  const clinicId: string = meta.clinicId ?? 'demo-clinic'
+
+  const patient_name: string =
+    vars.patient_name || meta.patient_name || structured.patient_name || ''
+  const skin_concern: string =
+    structured.skin_concern || meta.skin_concern || ''
+  const phone: string =
+    vars.patient_phone || meta.phone || structured.phone || ''
+  const clinicId: string = meta.clinicId ?? vars.clinicId ?? 'demo-clinic'
+
+  console.log('[vapi-webhook] vars:', vars, '| structured:', structured)
 
   const confirmedSlot = isConfirmedSlot(structured.preferred_slot) ? structured.preferred_slot : null
 

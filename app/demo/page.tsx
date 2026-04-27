@@ -283,7 +283,13 @@ export default function HomePage() {
       const { default: Vapi } = await import('@vapi-ai/web')
       const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY!)
       vapi.on('call-start', () => setVapiState('active'))
-      vapi.on('call-end', () => { setVapiState('ended'); vapiRef.current = null })
+      vapi.on('call-end', () => {
+        setVapiState('ended')
+        vapiRef.current = null
+        // Webhook processing takes ~1-2s after call ends — poll until booking appears
+        setTimeout(() => loadBookings(), 2500)
+        setTimeout(() => loadBookings(), 5000)
+      })
       vapi.on('error', (err: unknown) => { console.error('[vapi]', err); setVapiState('idle'); vapiRef.current = null })
       vapiRef.current = vapi
 
