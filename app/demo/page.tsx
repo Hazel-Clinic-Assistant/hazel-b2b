@@ -286,9 +286,9 @@ export default function HomePage() {
       vapi.on('call-end', () => {
         setVapiState('ended')
         vapiRef.current = null
-        // Webhook processing takes ~1-2s after call ends — poll until booking appears
-        setTimeout(() => loadBookings(), 2500)
-        setTimeout(() => loadBookings(), 5000)
+        // VAPI sends end-of-call-report after structured data analysis completes
+        // (can take 10–30s). Poll at increasing intervals until the booking appears.
+        ;[4, 8, 14, 22, 35, 55].forEach(s => setTimeout(() => loadBookings(), s * 1000))
       })
       vapi.on('error', (err: unknown) => { console.error('[vapi]', err); setVapiState('idle'); vapiRef.current = null })
       vapiRef.current = vapi
