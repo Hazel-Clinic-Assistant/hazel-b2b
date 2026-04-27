@@ -29,12 +29,12 @@ ${slotLine}${addressLine}
 Before your visit, please take a few minutes to complete your skin intake form:
 ${intakeLink}
 
-You can also link your Hazel skin passport so your clinician has your full history ready:
+You can also link your hazel skin passport so your clinician has your full history ready:
 ${passportLink}
 
 Reply anytime if you have questions — I'm here to help.
 
-— Hazel`
+— hazel`
 
   await getClient().messages.create({
     from: FROM,
@@ -66,7 +66,7 @@ export async function sendWhatsAppSlotFollowUp(
   const concernLine = skinConcern ? ` about your ${skinConcern}` : ''
   const name = patientName ? ` ${patientName}` : ''
 
-  const body = `Hi${name}! 🌿 Thanks for chatting with Hazel.
+  const body = `Hi${name}! 🌿 Thanks for chatting with hazel.
 
 No worries about not locking in a slot on the call — here are our next available appointments at Harley Street Skin Clinic${concernLine}:
 
@@ -74,7 +74,7 @@ ${slots.join('\n')}
 
 Just reply with the one that suits you and I'll get it confirmed straight away. Or call us directly on 0207 436 4441.
 
-— Hazel`
+— hazel`
 
   await getClient().messages.create({
     from: FROM,
@@ -89,6 +89,7 @@ export async function sendWhatsAppCompanionInvite(to: string, patientName: strin
   const body = `Hi${name}! 🌿 Your hazel companion is now linked to your appointment.
 
 To start tracking your skin and share your full history with your clinician, open hazel here:
+
 https://hazelskincoach.vercel.app/patient/onboarding
 
 — hazel`
@@ -114,7 +115,7 @@ Just a gentle reminder — your appointment at ${clinicName} is tomorrow.
 
 We look forward to seeing you.
 
-— Hazel`
+— hazel`
 
   await getClient().messages.create({
     from: FROM,

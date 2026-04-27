@@ -289,10 +289,26 @@ export default function HomePage() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const overrides: Record<string, any> = {}
-      overrides.variableValues = {
-        ...(name.trim() && { patient_name: name.trim() }),
-        ...(phone.trim() && { patient_phone: phone.trim() }),
+
+      // Pass name + phone as metadata so the webhook uses the UI-entered values
+      // rather than relying on potentially mis-transcribed structured data
+      overrides.metadata = {
+        patient_name: name.trim(),
+        phone: phone.trim(),
       }
+
+      overrides.variableValues = {
+        patient_name: name.trim(),
+        patient_phone: phone.trim(),
+      }
+
+      // Always greet by name so hazel doesn't ask for it on the call
+      const fn = name.trim().split(' ')[0]
+      const clinicName = clinicData?.name ?? activeClinic.name
+      overrides.firstMessage = fn
+        ? `Hi ${fn}! It's hazel — the AI receptionist for ${clinicName}. What brings you in today?`
+        : `Hi! It's hazel — the AI receptionist for ${clinicName}. What can I help you with today?`
+
       if (clinicData) {
         // Fetch full model config before overriding — VAPI requires the complete provider spec
         const modelRes = await fetch('/api/get-assistant-model')
@@ -301,13 +317,9 @@ export default function HomePage() {
           ...modelData.model,
           messages: [{ role: 'system', content: buildSystemPrompt(clinicData) }],
         }
-        const fn = name.trim().split(' ')[0]
-        overrides.firstMessage = fn
-          ? `Hi ${fn}! I'm hazel calling from ${clinicData.name}. What brings you in today?`
-          : `Hi! I'm hazel calling from ${clinicData.name}. What can I help you with today?`
       }
 
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, Object.keys(overrides).length ? overrides : undefined)
+      await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, overrides)
     } catch (err) {
       console.error('[vapi] start failed', err)
       setVapiState('idle')

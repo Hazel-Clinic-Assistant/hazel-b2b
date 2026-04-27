@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
-import { sendWhatsAppConfirmation } from '@/lib/twilio'
+import { sendWhatsAppConfirmation, sendWhatsAppSlotFollowUp } from '@/lib/twilio'
 
 // Only treat a slot as confirmed if it looks like a real time/day, not a hallucinated filler value
 const NULL_SLOT_PATTERNS = /^(none|n\/a|not specified|unknown|tbd|null|not confirmed|not booked|no slot|not selected|not chosen)$/i
@@ -20,13 +20,13 @@ export async function POST(request: NextRequest) {
   }
 
   const structured = body.message.analysis?.structuredData ?? {}
+  const meta = body.message.call?.metadata ?? {}
   const { urgency } = structured
-  const patient_name: string =
-    body.message.call?.metadata?.patient_name || structured.patient_name || ''
-  const skin_concern: string =
-    structured.skin_concern || body.message.call?.metadata?.skin_concern || ''
-  const phone: string = structured.phone || body.message.call?.metadata?.phone || ''
-  const clinicId: string = body.message.call?.metadata?.clinicId ?? 'demo-clinic'
+  // Prefer metadata (UI-entered, exact) over structured data (transcription, error-prone)
+  const patient_name: string = meta.patient_name || structured.patient_name || ''
+  const skin_concern: string = structured.skin_concern || meta.skin_concern || ''
+  const phone: string = meta.phone || structured.phone || ''
+  const clinicId: string = meta.clinicId ?? 'demo-clinic'
 
   const confirmedSlot = isConfirmedSlot(structured.preferred_slot) ? structured.preferred_slot : null
 
@@ -61,17 +61,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: error?.message }, { status: 500 })
   }
 
-  // Only send a WhatsApp message if a slot was actually confirmed
-  if (confirmedSlot && phone) {
+  if (phone) {
     try {
-      await sendWhatsAppConfirmation(
-        phone,
-        patient_name,
-        clinic?.name ?? clinicId,
-        clinic?.address ?? '',
-        confirmedSlot,
-        booking.id
-      )
+      if (confirmedSlot) {
+        // Slot confirmed — send booking confirmation with intake + passport links
+        await sendWhatsAppConfirmation(
+          phone,
+          patient_name,
+          clinic?.name ?? clinicId,
+          clinic?.address ?? '',
+          confirmedSlot,
+          booking.id
+        )
+      } else {
+        // No slot confirmed — send available slots + intake link
+        await sendWhatsAppSlotFollowUp(phone, patient_name, skin_concern)
+      }
       await supabase
         .from('bookings')
         .update({ whatsapp_status: 'sent' })
