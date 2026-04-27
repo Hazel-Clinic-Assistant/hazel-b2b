@@ -196,11 +196,13 @@ export default function HomePage() {
   const vapiRef = useRef<any>(null)
 
   const hasName = name.trim().length > 0
+  const hasPhone = phone.trim().length > 0
+  const hasDetails = hasName && hasPhone
 
-  const focusName = () => {
+  const focusInputs = () => {
     nameRef.current?.focus()
     setNameHint(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    nameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     setTimeout(() => setNameHint(false), 1500)
   }
 
@@ -287,8 +289,9 @@ export default function HomePage() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const overrides: Record<string, any> = {}
-      if (name.trim()) {
-        overrides.variableValues = { patient_name: name.trim() }
+      overrides.variableValues = {
+        ...(name.trim() && { patient_name: name.trim() }),
+        ...(phone.trim() && { patient_phone: phone.trim() }),
       }
       if (clinicData) {
         // Fetch full model config before overriding — VAPI requires the complete provider spec
@@ -432,23 +435,34 @@ export default function HomePage() {
             </p>
           )}
 
-          {/* Name input */}
-          <div className="max-w-xs mx-auto mb-10">
-            <div className="relative">
-              <input
-                ref={nameRef}
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
-                className={`hazel-input text-center pr-11 transition-all duration-300 ${nameHint ? 'ring-2 ring-hazel-sage border-hazel-sage' : ''}`}
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                <SpeechInputButton onTranscript={(t) => setName(t)} />
+          {/* Name + phone inputs */}
+          <div className="max-w-xl mx-auto mb-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="relative">
+                <input
+                  ref={nameRef}
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                  className={`hazel-input w-full pr-11 transition-all duration-300 ${nameHint ? 'ring-2 ring-hazel-sage border-hazel-sage' : ''}`}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <SpeechInputButton onTranscript={(t) => setName(t)} />
+                </div>
               </div>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Phone number (e.g. +44 7700 900000)"
+                className="hazel-input w-full"
+              />
             </div>
-            {!hasName && (
-              <p className="text-xs text-hazel-muted/40 text-center mt-2">Enter your name to get started</p>
+            {!hasDetails && (
+              <p className="text-xs text-hazel-muted/40 text-center mt-2">
+                {!hasName ? 'Enter your name and phone number to get started' : 'Enter your phone number to get started'}
+              </p>
             )}
           </div>
 
@@ -468,7 +482,7 @@ export default function HomePage() {
                 <p className="text-hazel-muted text-sm mb-6 flex-1 leading-relaxed">
                   Ask about {activeClinic.name} treatments or book over WhatsApp. hazel replies instantly, 24/7.
                 </p>
-                {hasName ? (
+                {hasDetails ? (
                   <a
                     href={waLink}
                     target="_blank"
@@ -480,10 +494,10 @@ export default function HomePage() {
                   </a>
                 ) : (
                   <button
-                    onClick={focusName}
+                    onClick={focusInputs}
                     className="w-full inline-flex items-center justify-center bg-hazel-cream text-hazel-muted/50 py-3 rounded-full font-medium text-sm hover:bg-hazel-cream/80 transition-colors"
                   >
-                    Enter your name first ↑
+                    Enter your details first ↑
                   </button>
                 )}
               </div>
@@ -503,15 +517,15 @@ export default function HomePage() {
                 {vapiState === 'idle' && (
                   <>
                     <p className="text-hazel-muted text-sm mb-6 flex-1 leading-relaxed">
-                      Talk to hazel live in your browser — no phone number needed. Just click and speak.
+                      Talk to hazel live in your browser. hazel already knows your name and number — no need to repeat yourself.
                     </p>
-                    {hasName ? (
+                    {hasDetails ? (
                       <button onClick={handleBrowserCall} className="w-full bg-hazel-green text-hazel-cream py-3 rounded-full font-medium hover:bg-hazel-green-light transition-colors text-sm">
                         Talk to hazel →
                       </button>
                     ) : (
-                      <button onClick={focusName} className="w-full bg-hazel-cream text-hazel-muted/50 py-3 rounded-full font-medium text-sm hover:bg-hazel-cream/80 transition-colors">
-                        Enter your name first ↑
+                      <button onClick={focusInputs} className="w-full bg-hazel-cream text-hazel-muted/50 py-3 rounded-full font-medium text-sm hover:bg-hazel-cream/80 transition-colors">
+                        Enter your details first ↑
                       </button>
                     )}
                   </>
@@ -571,8 +585,8 @@ export default function HomePage() {
                       <p className="text-sm font-medium text-hazel-green">{name ? `Calling ${name} now` : 'Calling you now'}</p>
                       <p className="text-xs text-hazel-muted text-center">Expect a call on {phone} within 30 seconds.</p>
                     </div>
-                    <button onClick={() => { setCallbackState('idle'); setPhone('') }} className="text-xs text-hazel-muted/50 underline underline-offset-2">
-                      Use a different number
+                    <button onClick={() => setCallbackState('idle')} className="text-xs text-hazel-muted/50 underline underline-offset-2">
+                      Call again
                     </button>
                   </>
                 ) : (
@@ -583,30 +597,20 @@ export default function HomePage() {
                       </div>
                       <p className="text-sm font-medium text-hazel-green">get a call back</p>
                     </div>
-                    <p className="text-hazel-muted text-sm mb-4 flex-1 leading-relaxed">
-                      Enter your number and hazel calls you within 30 seconds — no hold music, no queues.
+                    <p className="text-hazel-muted text-sm mb-6 flex-1 leading-relaxed">
+                      hazel will call you on {hasPhone ? <span className="font-medium text-hazel-green">{phone}</span> : 'your number'} within 30 seconds — no hold music, no queues.
                     </p>
-                    <div className="mb-3">
-                      <input
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleRequestCallback()}
-                        placeholder="+1 555 000 0000"
-                        className="hazel-input text-sm"
-                      />
-                    </div>
-                    {hasName ? (
+                    {hasDetails ? (
                       <button
                         onClick={handleRequestCallback}
-                        disabled={callbackState === 'requesting' || !phone.trim()}
+                        disabled={callbackState === 'requesting'}
                         className="w-full bg-hazel-green text-hazel-cream py-3 rounded-full font-medium hover:bg-hazel-green-light transition-colors disabled:opacity-50 text-sm"
                       >
                         {callbackState === 'requesting' ? 'Calling you…' : 'Call me now →'}
                       </button>
                     ) : (
-                      <button onClick={focusName} className="w-full bg-hazel-cream text-hazel-muted/50 py-3 rounded-full font-medium text-sm hover:bg-hazel-cream/80 transition-colors">
-                        Enter your name first ↑
+                      <button onClick={focusInputs} className="w-full bg-hazel-cream text-hazel-muted/50 py-3 rounded-full font-medium text-sm hover:bg-hazel-cream/80 transition-colors">
+                        Enter your details first ↑
                       </button>
                     )}
                     {callbackState === 'error' && (
