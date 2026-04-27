@@ -181,7 +181,7 @@ export default function LandingPage() {
         </div>
 
         <h1 className="hazel-wordmark font-light text-5xl md:text-6xl lg:text-7xl tracking-tight leading-tight mb-6" style={{ color: '#E7DED3' }}>
-          From first call<br className="hidden sm:block" /> to lifelong patient.
+          The voice of<br className="hidden sm:block" /> exceptional care.
         </h1>
         <p className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10" style={{ color: 'rgba(231,222,211,0.55)' }}>
           hazel is the complete patient management system for skin clinics — handling everything from the first booking call to long-term follow-up, automatically.
